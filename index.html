@@ -520,14 +520,14 @@ table.dt tr:hover td{background:var(--bg2);}
           <div class="field">
             <label>Date</label>
             <div class="date-input-wrap">
-              <input type="date" id="doc-date" style="font-size:13px;">
+              <input type="date" id="doc-date" style="font-size:13px;" oninput="autoDue()">
               <button type="button" class="date-today-btn" onclick="setToday('doc-date')">Today</button>
             </div>
           </div>
           <div class="field">
             <label id="due-label">Due date</label>
             <div class="date-input-wrap">
-              <input type="date" id="doc-due" style="font-size:13px;">
+              <input type="date" id="doc-due" style="font-size:13px;" oninput="dueAuto=false">
               <button type="button" class="date-today-btn" onclick="setToday('doc-due')">Today</button>
             </div>
           </div>
@@ -557,6 +557,13 @@ table.dt tr:hover td{background:var(--bg2);}
       <div style="display:grid;grid-template-columns:1fr 320px;gap:12px;margin-bottom:12px;">
         <!-- Notes -->
         <div class="card" style="margin-bottom:0;">
+          <div class="field" style="margin-bottom:14px;">
+            <label for="doc-preset">Wording preset</label>
+            <select id="doc-preset" onchange="docPresetChanged()"></select>
+            <div id="doc-inc-preview" style="font-size:11px;color:var(--text3);line-height:1.5;"></div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text2);cursor:pointer;margin-top:4px;"><input type="checkbox" id="doc-inc-custom" onchange="docIncCustomToggle()"> Customize the “included” lines for this document only</label>
+            <textarea id="doc-inc" class="hidden" rows="5" placeholder="One item per line"></textarea>
+          </div>
           <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:10px;">Notes</div>
           <textarea id="doc-notes" placeholder="Payment terms, special instructions, thank you message…" style="width:100%;min-height:130px;font-size:13px;padding:10px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;resize:vertical;outline:none;line-height:1.6;"></textarea>
           <div style="font-size:11px;color:var(--text3);margin-top:6px;">Line breaks are preserved on exported PDFs.</div>
@@ -678,6 +685,39 @@ table.dt tr:hover td{background:var(--bg2);}
         <div class="section-label">Payment instructions</div>
         <div class="field"><label>Payment instructions shown on invoices</label><textarea id="b-paymentInfo" rows="5" placeholder="Payment can be made electronically.&#10;Venmo: @yourhandle&#10;Zelle: you@example.com"></textarea></div>
         <div style="font-size:12px;color:var(--text2);margin-top:8px;">Plain text, one item per line. Printed on invoices only. Leave empty to hide the payment block.</div>
+      </div>
+      <div class="card" id="dw-card">
+        <div class="section-label">Document wording</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5;">The wording printed on your estimates and invoices. Make a preset for each kind of job (for example Video / film and Audio), then pick one on each document. Press <strong>Save</strong> at the top to keep your changes. The footer line and watermark are in Output style.</div>
+        <div class="field" style="margin-bottom:12px;">
+          <label for="dw-sel">Preset you are editing</label>
+          <select id="dw-sel" onchange="dwSwitch()"></select>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+            <button class="btn" type="button" onclick="dwAdd()"><i class="ti ti-plus"></i> New preset</button>
+            <button class="btn" type="button" onclick="dwDup()"><i class="ti ti-copy"></i> Duplicate</button>
+            <button class="btn" type="button" onclick="dwDel()"><i class="ti ti-trash"></i> Delete</button>
+          </div>
+        </div>
+        <div class="grid2" style="gap:14px;">
+          <div class="field"><label for="dw-name">Preset name</label><input id="dw-name" placeholder="Audio"></div>
+          <div class="field"><label for="dw-heading">Heading of the “included” box</label><input id="dw-heading" placeholder="All prices include"></div>
+          <div class="field" style="grid-column:1/-1;"><label for="dw-includes">What’s included (one item per line)</label><textarea id="dw-includes" rows="6" placeholder="Your original tapes returned to you"></textarea></div>
+          <div class="field" style="grid-column:1/-1;"><label for="dw-note">Default note / terms</label><textarea id="dw-note" rows="3" placeholder="Printed when a document has no notes of its own"></textarea></div>
+          <div class="field" style="grid-column:1/-1;"><label for="dw-thanks">Thank-you message</label><input id="dw-thanks" placeholder="Thank you for your business!"></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-top:12px;cursor:pointer;"><input type="checkbox" id="dw-default"> Use this preset for documents that don’t pick one</label>
+        <div class="section-label" style="margin-top:20px;">All documents</div>
+        <div class="grid2" style="gap:14px;">
+          <div class="field"><label for="dw-validdays">Estimates are valid for (days)</label><input id="dw-validdays" type="number" min="0" max="3650" placeholder="30"></div>
+          <div class="field"><label for="dw-includeon">Show the “included” box on</label><select id="dw-includeon"><option value="estimate">Estimates only</option><option value="both">Estimates and invoices</option><option value="invoice">Invoices only</option><option value="none">Nowhere</option></select></div>
+          <div class="field"><label for="dw-esttitle">Estimate title</label><input id="dw-esttitle" placeholder="ESTIMATE"></div>
+          <div class="field"><label for="dw-invtitle">Invoice title</label><input id="dw-invtitle" placeholder="INVOICE"></div>
+          <div class="field"><label for="dw-validlabel">“Valid until” label</label><input id="dw-validlabel" placeholder="Valid until"></div>
+          <div class="field"><label for="dw-duelabel">“Due” label</label><input id="dw-duelabel" placeholder="Due"></div>
+          <div class="field"><label for="dw-taxlabel">Tax label</label><input id="dw-taxlabel" placeholder="Tax"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-top:8px;line-height:1.5;">New estimates fill in “Valid until” automatically (date + days). You can still type any date on a document. Use 0 days to leave it blank.</div>
+        <button class="btn" type="button" style="margin-top:12px;" onclick="dwReset()"><i class="ti ti-restore"></i> Restore original wording</button>
       </div>
       <div class="card">
         <div class="section-label">Logo</div>
@@ -1145,6 +1185,28 @@ let sb=null,cloudUser=null,syncer=null,appBooted=false,recoveryMode=false,offlin
 const escH=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function defaultBranding(){return {company:'',email:'',phone:'',website:'',address:'',logoDataUrl:'',paymentInfo:''};}
 function defaultAppearance(){return {accent:'#2C4A7C',headerBg:'#2C4A7C',font:"Georgia,'Times New Roman',serif",showLogo:true,showAddr:true,footer:'',wmEnabled:false,wmText:'DRAFT',wmColor:'#cccccc',reviewEnabled:false,reviewLink:''};}
+// DOCUMENT WORDING (stored inside the settings row as branding.docWording; no schema change)
+const DW_VIDEO_INC=['Your original tapes returned to you','Footage transferred to a dedicated USB drive (Type A & C)','Files labeled to match your tape names',"I'll help you view them on any TV, computer, or laptop (up to 30 minutes)"].join('\n');
+const DW_AUDIO_INC=['Your original tapes returned to you','Audio files transferred to a dedicated USB drive','Files labeled to match your tape names',"I'll help you play them on any computer or phone (up to 30 minutes)"].join('\n');
+function defaultWording(){return {validDays:30,includeOn:'estimate',estimateTitle:'ESTIMATE',invoiceTitle:'INVOICE',validLabel:'Valid until',dueLabel:'Due',taxLabel:'Tax',defaultPreset:'video',
+  presets:[{id:'video',name:'Video / film',heading:'All prices include',includes:DW_VIDEO_INC,note:'',thanks:''},{id:'audio',name:'Audio',heading:'All prices include',includes:DW_AUDIO_INC,note:'',thanks:''}]};}
+// Always returns a complete, safe object, whatever (or nothing) is stored.
+function getWording(){
+  const base=defaultWording(),raw=(S.branding&&S.branding.docWording&&typeof S.branding.docWording==='object')?S.branding.docWording:{};
+  const str=(v,d)=>typeof v==='string'?v:d;
+  const w={};
+  ['estimateTitle','invoiceTitle','validLabel','dueLabel','taxLabel'].forEach(k=>{w[k]=str(raw[k],base[k]);});
+  const vd=parseInt(raw.validDays,10);w.validDays=Number.isFinite(vd)&&vd>=0?Math.min(vd,3650):base.validDays;
+  w.includeOn=['estimate','invoice','both','none'].includes(raw.includeOn)?raw.includeOn:base.includeOn;
+  let pr=Array.isArray(raw.presets)?raw.presets.filter(x=>x&&typeof x==='object'&&x.id!=null).map(x=>({id:String(x.id),name:str(x.name,''),heading:str(x.heading,''),includes:str(x.includes,''),note:str(x.note,''),thanks:str(x.thanks,'')})):[];
+  if(!pr.length)pr=base.presets;
+  w.presets=pr;
+  w.defaultPreset=pr.some(x=>x.id===String(raw.defaultPreset))?String(raw.defaultPreset):pr[0].id;
+  return w;
+}
+const wLines=t=>String(t||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+function wPreset(doc,w){w=w||getWording();return w.presets.find(x=>x.id===(doc&&doc.wordingPreset))||w.presets.find(x=>x.id===w.defaultPreset)||w.presets[0];}
+function wInclLines(doc,w){return wLines(doc&&typeof doc.incOverride==='string'?doc.incOverride:wPreset(doc,w).includes);}
 function applyLoaded(p){
   // Same merge as the original load(): shape p into S
   Object.assign(S,p);
@@ -1848,6 +1910,8 @@ function duplicateDoc(id,e){
     due:'',
     status:'draft',
     notes:src.notes||'',
+    wordingPreset:src.wordingPreset||'',
+    ...(typeof src.incOverride==='string'?{incOverride:src.incOverride}:{}),
     lineItems:JSON.parse(JSON.stringify(src.lineItems||[])),
     taxRate:src.taxRate||0,
     discount:src.discount||0,
@@ -1897,6 +1961,26 @@ function setDiscType(t){
   }
   updateTotals();
 }
+let dueAuto=false;
+function addDaysISO(iso,n){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||'');if(!m)return '';const d=new Date(+m[1],+m[2]-1,+m[3]+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function autoDue(){
+  if(!dueAuto||$('doc-type').value!=='estimate')return;
+  const n=getWording().validDays;$('doc-due').value=n>0?addDaysISO($('doc-date').value,n):'';
+}
+function renderDocPresetSel(cur){
+  const w=getWording(),sel=$('doc-preset');
+  sel.innerHTML='<option value="">Default ('+escH(wPreset({},w).name||'unnamed')+')</option>'+w.presets.map(x=>'<option value="'+escH(x.id)+'">'+escH(x.name||'(unnamed)')+'</option>').join('');
+  sel.value=w.presets.some(x=>x.id===cur)?cur:'';
+}
+function docPresetChanged(){
+  const doc={wordingPreset:$('doc-preset').value};
+  $('doc-inc-preview').textContent=$('doc-inc-custom').checked?'':'Prints: '+wInclLines(doc).join(' · ');
+}
+function docIncCustomToggle(){
+  const on=$('doc-inc-custom').checked;$('doc-inc').classList.toggle('hidden',!on);
+  if(on&&!$('doc-inc').value)$('doc-inc').value=wInclLines({wordingPreset:$('doc-preset').value}).join('\n');
+  docPresetChanged();
+}
 function setDocType(t){
   $('doc-type').value=t;
   const ib=$('toggle-invoice'),eb=$('toggle-estimate');
@@ -1912,8 +1996,9 @@ function setDocType(t){
     const disp=$('doc-number-display');
     if(disp)disp.textContent=num;
   }
-  $('due-label').textContent=t==='invoice'?'Due date':'Valid until';
+  $('due-label').textContent=t==='invoice'?'Due date':(getWording().validLabel||'Valid until');
   $('doc-status').value=t==='estimate'?'draft':'draft';
+  if(!S.editingDocId&&dueAuto){if(t==='estimate')autoDue();else $('doc-due').value='';}
 }
 function newDocument(){
   S.editingDocId=null;
@@ -1937,6 +2022,11 @@ function initCreate(d){
   $('doc-status').value=d?d.status:'draft';
   $('doc-client').value='';
   hideSaveIndicator();
+  dueAuto=!d;
+  renderDocPresetSel(d&&d.wordingPreset);
+  const hasOv=!!(d&&typeof d.incOverride==='string');
+  $('doc-inc-custom').checked=hasOv;$('doc-inc').value=hasOv?d.incOverride:'';$('doc-inc').classList.toggle('hidden',!hasOv);
+  docPresetChanged();
   setDocType(t);
   setDiscType(discType);
   refreshClients();if(d)$('doc-client').value=d.clientId||'';
@@ -1947,7 +2037,7 @@ function updateDocType(){
 }
 function refreshClients(){
   const sel=$('doc-client'),cur=sel.value;
-  sel.innerHTML='<option value="">— select client —</option>'+S.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  sel.innerHTML='<option value="">— select client —</option>'+S.clients.map(c=>`<option value="${escH(c.id)}">${escH(c.name)}</option>`).join('');
   if(cur)sel.value=cur;
 }
 function renderLines(){
@@ -2003,6 +2093,8 @@ function saveDoc(ov){
     clientId:parseInt($('doc-client').value)||null,
     date:$('doc-date').value,due:$('doc-due').value,status:ov||$('doc-status').value||'draft',
     notes:$('doc-notes').value,
+    wordingPreset:$('doc-preset').value,
+    ...($('doc-inc-custom').checked?{incOverride:$('doc-inc').value}:{}),
     lineItems:JSON.parse(JSON.stringify(S.lineItems)),
     taxRate:parseFloat($('tax-rate').value)||0,
     discount:calcDiscount(sub),
@@ -2216,8 +2308,51 @@ function loadBranding(){
   const prev=$('logo-preview');prev.querySelectorAll('img').forEach(i=>i.remove());
   if(b.logoDataUrl){$('logo-placeholder').classList.add('hidden');const img=document.createElement('img');img.src=b.logoDataUrl;prev.appendChild(img);}
   else $('logo-placeholder').classList.remove('hidden');
+  dwLoad();
 }
-function saveBranding(){['company','email','phone','website','address','paymentInfo'].forEach(k=>{S.branding[k]=$('b-'+k).value;});persist();toast('Company info saved!');}
+function saveBranding(){['company','email','phone','website','address','paymentInfo'].forEach(k=>{S.branding[k]=$('b-'+k).value;});if(!dwDraft)dwLoad();dwCommit();S.branding.docWording=getWordingFrom(dwDraft);dwDraft=getWording();persist();toast('Company info saved!');}
+// Document wording editor: edits a working copy, written to branding.docWording on Save
+let dwDraft=null,dwCur='';
+function getWordingFrom(x){const keep=S.branding.docWording;S.branding.docWording=x;const w=getWording();S.branding.docWording=keep;return w;}
+function dwLoad(){
+  dwDraft=getWording();dwCur=dwDraft.defaultPreset;
+  $('dw-validdays').value=dwDraft.validDays;$('dw-includeon').value=dwDraft.includeOn;$('dw-esttitle').value=dwDraft.estimateTitle;$('dw-invtitle').value=dwDraft.invoiceTitle;
+  $('dw-validlabel').value=dwDraft.validLabel;$('dw-duelabel').value=dwDraft.dueLabel;$('dw-taxlabel').value=dwDraft.taxLabel;
+  dwFill();
+}
+function dwFill(){
+  const sel=$('dw-sel');
+  sel.innerHTML=dwDraft.presets.map(x=>'<option value="'+escH(x.id)+'">'+escH((x.name||'(unnamed)')+(x.id===dwDraft.defaultPreset?' (default)':''))+'</option>').join('');
+  sel.value=dwCur;
+  const p=dwDraft.presets.find(x=>x.id===dwCur);
+  $('dw-name').value=p.name;$('dw-heading').value=p.heading;$('dw-includes').value=p.includes;$('dw-note').value=p.note;$('dw-thanks').value=p.thanks;
+  const isDef=dwCur===dwDraft.defaultPreset;$('dw-default').checked=isDef;$('dw-default').disabled=isDef;
+}
+function dwCommit(){
+  if(!dwDraft)return;
+  const p=dwDraft.presets.find(x=>x.id===dwCur);
+  if(p){p.name=$('dw-name').value.trim();p.heading=$('dw-heading').value;p.includes=$('dw-includes').value;p.note=$('dw-note').value;p.thanks=$('dw-thanks').value;if($('dw-default').checked)dwDraft.defaultPreset=p.id;}
+  const n=parseInt($('dw-validdays').value,10);dwDraft.validDays=Number.isFinite(n)&&n>=0?n:30;
+  dwDraft.includeOn=$('dw-includeon').value;dwDraft.estimateTitle=$('dw-esttitle').value;dwDraft.invoiceTitle=$('dw-invtitle').value;
+  dwDraft.validLabel=$('dw-validlabel').value;dwDraft.dueLabel=$('dw-duelabel').value;dwDraft.taxLabel=$('dw-taxlabel').value;
+}
+function dwSwitch(){const next=$('dw-sel').value;dwCommit();dwCur=next;dwFill();}
+function dwNewId(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function dwAdd(){dwCommit();const p={id:dwNewId(),name:'New preset',heading:'All prices include',includes:'',note:'',thanks:''};dwDraft.presets.push(p);dwCur=p.id;dwFill();$('dw-name').focus();}
+function dwDup(){dwCommit();const s=dwDraft.presets.find(x=>x.id===dwCur);const p=Object.assign({},s,{id:dwNewId(),name:(s.name||'Preset')+' copy'});dwDraft.presets.push(p);dwCur=p.id;dwFill();}
+function dwDel(){
+  if(dwDraft.presets.length<2){toast('You need at least one preset.');return;}
+  if(!confirm('Delete this preset? Documents that used it will use the default preset instead.'))return;
+  dwCommit();dwDraft.presets=dwDraft.presets.filter(x=>x.id!==dwCur);
+  if(dwDraft.defaultPreset===dwCur)dwDraft.defaultPreset=dwDraft.presets[0].id;
+  dwCur=dwDraft.defaultPreset;dwFill();
+}
+function dwReset(){
+  if(!confirm('Restore the original wording and presets? Your own presets and edits in this section will be replaced (press Save to keep).'))return;
+  dwDraft=defaultWording();dwCur=dwDraft.defaultPreset;
+  $('dw-validdays').value=dwDraft.validDays;$('dw-includeon').value=dwDraft.includeOn;$('dw-esttitle').value=dwDraft.estimateTitle;$('dw-invtitle').value=dwDraft.invoiceTitle;
+  $('dw-validlabel').value=dwDraft.validLabel;$('dw-duelabel').value=dwDraft.dueLabel;$('dw-taxlabel').value=dwDraft.taxLabel;dwFill();
+}
 function previewLogo(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{S.branding.logoDataUrl=ev.target.result;const prev=$('logo-preview');$('logo-placeholder').classList.add('hidden');prev.querySelectorAll('img').forEach(i=>i.remove());const img=document.createElement('img');img.src=ev.target.result;prev.appendChild(img);};r.readAsDataURL(f);}
 function removeLogo(){S.branding.logoDataUrl='';$('logo-preview').querySelectorAll('img').forEach(i=>i.remove());$('logo-placeholder').classList.remove('hidden');$('logo-upload').value='';}
 
@@ -2278,19 +2413,28 @@ function importData(e){
 
 // PDF EXPORT
 function exportPDF(){
-  const doc=saveDoc();const cl=S.clients.find(c=>c.id===doc.clientId);
-  const b=S.branding,a=S.appearance;
+  const doc=saveDoc();
+  const html=docHTML(doc);
+  const win=window.open('','_blank','width=920,height=720');
+  if(win){win.document.write(html);win.document.close();setTimeout(()=>{win.focus();win.print();},900);toast('PDF ready — Print → Save as PDF');}
+  else toast('Allow popups to export PDF');
+}
+// Builds the printable estimate/invoice page. All user-entered text is HTML-escaped here.
+function docHTML(doc){
+  const cl=S.clients.find(c=>c.id===doc.clientId);
+  const b=S.branding,a=S.appearance,W=getWording();
+  const nl=t=>escH(t).replace(/\r?\n/g,'<br>');
   const sub=doc.lineItems.reduce((s,i)=>s+(i.qty||0)*(i.price||0),0);
   const tax=sub*(doc.taxRate||0)/100,total=sub+tax;
   const ac=a.accent||'#2C4A7C',hb=a.headerBg||ac,font=a.font||"Georgia,'Times New Roman',serif";
   const luma=hex=>{if(!hex||hex.length<7)return 128;return 0.299*parseInt(hex.slice(1,3),16)+0.587*parseInt(hex.slice(3,5),16)+0.114*parseInt(hex.slice(5,7),16);};
   const htc=luma(hb)>140?'#1a1a1a':'#ffffff';
-  const logoH=(a.showLogo!==false&&b.logoDataUrl)?`<img src="${b.logoDataUrl}" style="height:90px;max-width:240px;object-fit:contain;display:block;margin-bottom:8px;">`:'';
-  const compH=`<div style="font-size:22px;font-weight:700;">${b.company||'C3 Collective'}</div>`;
-  const addrH=a.showAddr!==false?[b.address?b.address.replace(/\n/g,'<br>'):'',b.email,b.phone].filter(Boolean).join('<br>'):'';
-  const fromH=[b.company?`<strong>${b.company}</strong>`:'',b.address?b.address.replace(/\n/g,'<br>'):'',b.email,b.phone,b.website||'c3collectiveny.com'].filter(Boolean).join('<br>');
-  const toH=cl?[`<strong>${cl.name}</strong>`,cl.address?cl.address.replace(/\n/g,'<br>'):'',cl.email||'',cl.phone||''].filter(Boolean).join('<br>'):'—';
-  const itemsH=doc.lineItems.map((item,idx)=>`<tr style="background:${idx%2===0?'#fff':'#fafafa'};"><td style="padding:10px 14px;font-size:13px;border-bottom:1px solid #e8e8e8;">${item.desc||''}</td><td style="padding:10px 14px;font-size:13px;text-align:center;border-bottom:1px solid #e8e8e8;">${item.qty}</td><td style="padding:10px 14px;font-size:13px;text-align:right;border-bottom:1px solid #e8e8e8;">${fm(item.price)}</td><td style="padding:10px 14px;font-size:13px;text-align:right;font-weight:700;border-bottom:1px solid #e8e8e8;">${fm(item.qty*item.price)}</td></tr>`).join('');
+  const logoH=(a.showLogo!==false&&b.logoDataUrl)?`<img src="${escH(b.logoDataUrl)}" style="height:90px;max-width:240px;object-fit:contain;display:block;margin-bottom:8px;">`:'';
+  const compH=`<div style="font-size:22px;font-weight:700;">${escH(b.company||'C3 Collective')}</div>`;
+  const addrH=a.showAddr!==false?[b.address?nl(b.address):'',escH(b.email),escH(b.phone)].filter(Boolean).join('<br>'):'';
+  const fromH=[b.company?`<strong>${escH(b.company)}</strong>`:'',b.address?nl(b.address):'',escH(b.email),escH(b.phone),escH(b.website||'c3collectiveny.com')].filter(Boolean).join('<br>');
+  const toH=cl?[`<strong>${escH(cl.name)}</strong>`,cl.address?nl(cl.address):'',escH(cl.email||''),escH(cl.phone||'')].filter(Boolean).join('<br>'):'—';
+  const itemsH=doc.lineItems.map((item,idx)=>`<tr style="background:${idx%2===0?'#fff':'#fafafa'};"><td style="padding:10px 14px;font-size:13px;border-bottom:1px solid #e8e8e8;">${escH(item.desc||'')}</td><td style="padding:10px 14px;font-size:13px;text-align:center;border-bottom:1px solid #e8e8e8;">${item.qty}</td><td style="padding:10px 14px;font-size:13px;text-align:right;border-bottom:1px solid #e8e8e8;">${fm(item.price)}</td><td style="padding:10px 14px;font-size:13px;text-align:right;font-weight:700;border-bottom:1px solid #e8e8e8;">${fm(item.qty*item.price)}</td></tr>`).join('');
   const docPayments=S.payments.filter(p=>p.docId===doc.id);
   const paidSoFar=docPayments.reduce((s,p)=>s+(p.amount||0),0);
   const balDue=Math.max(0,total-paidSoFar);
@@ -2302,13 +2446,19 @@ function exportPDF(){
   const afterDiscForPDF=Math.max(0,subForPDF-discForPDF);
   const taxForPDF=afterDiscForPDF*(doc.taxRate||0)/100;
   const totalForPDF=afterDiscForPDF+taxForPDF;
-  const payH=docPayments.length?`<div style="margin-bottom:10px;"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#aaa;font-weight:700;margin-bottom:6px;">Payments received</div><table style="width:100%;border-collapse:collapse;font-size:11.5px;"><thead><tr>${['Date','Method','Reference','Amount'].map(h=>`<th style="text-align:left;padding:5px 10px;background:#f0f0f0;color:#555;font-size:10px;text-transform:uppercase;">${h}</th>`).join('')}</tr></thead><tbody>${docPayments.map(p=>`<tr><td style="padding:5px 10px;border-bottom:1px solid #eee;">${p.date}</td><td style="padding:5px 10px;border-bottom:1px solid #eee;">${p.method}</td><td style="padding:5px 10px;border-bottom:1px solid #eee;color:#777;">${p.note||''}</td><td style="padding:5px 10px;border-bottom:1px solid #eee;text-align:right;color:#0F6E56;font-weight:600;">${fm(p.amount)}</td></tr>`).join('')}</tbody></table></div>`:'';
+  const payH=docPayments.length?`<div style="margin-bottom:10px;"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#aaa;font-weight:700;margin-bottom:6px;">Payments received</div><table style="width:100%;border-collapse:collapse;font-size:11.5px;"><thead><tr>${['Date','Method','Reference','Amount'].map(h=>`<th style="text-align:left;padding:5px 10px;background:#f0f0f0;color:#555;font-size:10px;text-transform:uppercase;">${h}</th>`).join('')}</tr></thead><tbody>${docPayments.map(p=>`<tr><td style="padding:5px 10px;border-bottom:1px solid #eee;">${escH(p.date)}</td><td style="padding:5px 10px;border-bottom:1px solid #eee;">${escH(p.method)}</td><td style="padding:5px 10px;border-bottom:1px solid #eee;color:#777;">${escH(p.note||'')}</td><td style="padding:5px 10px;border-bottom:1px solid #eee;text-align:right;color:#0F6E56;font-weight:600;">${fm(p.amount)}</td></tr>`).join('')}</tbody></table></div>`:'';
   const payInfoTxt=((S.branding&&S.branding.paymentInfo)||'').trim();
   const paymentInfoBlock=(doc.type==='invoice'&&payInfoTxt)?`<div style="margin-bottom:10px;background:#f8f7f4;border-left:4px solid ${ac};padding:8px 16px;border-radius:2px;"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#aaa;font-weight:700;margin-bottom:5px;">Payment information</div><div style="font-size:11.5px;color:#444;line-height:1.55;">${escH(payInfoTxt).replace(/\r?\n/g,'<br>')}</div></div>`:'';
-  const footT=a.footer||[b.company,b.email,b.website||'c3collectiveny.com'].filter(Boolean).join(' · ');
-  const reviewH=a.reviewEnabled?`<div style="text-align:center;background:#faf8f4;border:1px solid #eee;border-radius:6px;padding:9px 16px;margin-bottom:10px;font-size:11.5px;color:#444;line-height:1.5;"><strong style="color:${ac};">Enjoyed working with ${b.company||'us'}?</strong><br>${a.reviewLink?`A quick <a href="${a.reviewLink}" style="color:${ac};font-weight:700;">Google review</a> means the world to a small business like ours!`:'A quick Google review means the world to a small business like ours — just search us on Google!'}</div>`:'';
-  const wmH=a.wmEnabled?`<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);font-family:${font};font-size:80px;font-weight:700;color:${a.wmColor||'#ccc'};opacity:0.18;letter-spacing:0.12em;pointer-events:none;white-space:nowrap;z-index:0;">${a.wmText||'DRAFT'}</div>`:'';
-  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${doc.number}</title>
+  const footT=escH(a.footer||[b.company,b.email,b.website||'c3collectiveny.com'].filter(Boolean).join(' · '));
+  const reviewH=a.reviewEnabled?`<div style="text-align:center;background:#faf8f4;border:1px solid #eee;border-radius:6px;padding:9px 16px;margin-bottom:10px;font-size:11.5px;color:#444;line-height:1.5;"><strong style="color:${ac};">Enjoyed working with ${escH(b.company||'us')}?</strong><br>${a.reviewLink?`A quick <a href="${escH(a.reviewLink)}" style="color:${ac};font-weight:700;">Google review</a> means the world to a small business like ours!`:'A quick Google review means the world to a small business like ours — just search us on Google!'}</div>`:'';
+  const wmH=a.wmEnabled?`<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);font-family:${font};font-size:80px;font-weight:700;color:${a.wmColor||'#ccc'};opacity:0.18;letter-spacing:0.12em;pointer-events:none;white-space:nowrap;z-index:0;">${escH(a.wmText||'DRAFT')}</div>`:'';
+  const preset=wPreset(doc,W),incLines=wInclLines(doc,W);
+  const showInc=W.includeOn==='both'||W.includeOn===doc.type;
+  const inclH=(showInc&&incLines.length)?`<div style="background:#f8f7f4;border-left:3px solid ${ac};padding:10px 18px;font-size:11.5px;color:#444;margin-bottom:10px;">${preset.heading.trim()?`<div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#aaa;font-weight:700;margin-bottom:6px;">${escH(preset.heading.trim())}</div>`:''}<div style="display:flex;flex-direction:column;gap:5px;line-height:1.5;">${incLines.map(l=>`<div><span style="color:${ac};margin-right:8px;">&#10022;</span>${escH(l)}</div>`).join('')}</div></div>`:'';
+  const noteTxt=(doc.notes&&String(doc.notes).trim())?doc.notes:preset.note;
+  const notesH=(noteTxt&&String(noteTxt).trim())?`<div class="notes">${nl(noteTxt)}</div>`:'';
+  const thanksH=(preset.thanks&&preset.thanks.trim())?`<div style="text-align:center;font-size:12.5px;font-weight:700;color:${ac};margin:2px 0 10px;">${escH(preset.thanks.trim())}</div>`:'';
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escH(doc.number)}</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@400;500;600;700&family=Merriweather:wght@300;400;700&family=EB+Garamond:wght@400;500;600&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -2343,8 +2493,8 @@ tfoot tr.balance td{font-size:15px;font-weight:800;color:#1a1a1a;padding-top:4px
 <div class="hdr">
   <div class="hdr-left">${logoH}${compH}${addrH?`<div class="faddr">${addrH}</div>`:''}</div>
   <div class="hdr-right">
-    <div class="doc-type">${doc.type==='invoice'?'INVOICE':'ESTIMATE'}</div>
-    <div class="dmeta"><strong>${doc.number}</strong><br>Date: ${doc.date||'—'}${doc.due?`<br>${doc.type==='invoice'?'Due':'Valid until'}: ${doc.due}`:''}</div>
+    <div class="doc-type">${escH(doc.type==='invoice'?W.invoiceTitle:W.estimateTitle)}</div>
+    <div class="dmeta"><strong>${escH(doc.number)}</strong><br>Date: ${escH(doc.date||'—')}${doc.due?`<br>${escH(doc.type==='invoice'?W.dueLabel:W.validLabel)}: ${escH(doc.due)}`:''}</div>
   </div>
 </div>
 <div class="parties">
@@ -2357,17 +2507,15 @@ tfoot tr.balance td{font-size:15px;font-weight:800;color:#1a1a1a;padding-top:4px
 <tfoot>
   <tr><td colspan="3" style="text-align:right;padding-right:12px;">Subtotal</td><td style="text-align:right;">${fm(subForPDF)}</td></tr>
   ${discForPDF>0?`<tr><td colspan="3" style="text-align:right;padding-right:12px;color:#A32D2D;">Discount</td><td style="text-align:right;color:#A32D2D;">-${fm(discForPDF)}</td></tr>`:''}
-  ${doc.taxRate?`<tr><td colspan="3" style="text-align:right;padding-right:12px;">Tax (${doc.taxRate}%)</td><td style="text-align:right;">${fm(taxForPDF)}</td></tr>`:''}
+  ${doc.taxRate?`<tr><td colspan="3" style="text-align:right;padding-right:12px;">${escH(W.taxLabel)} (${escH(doc.taxRate)}%)</td><td style="text-align:right;">${fm(taxForPDF)}</td></tr>`:''}
   <tr class="grand"><td colspan="3" style="text-align:right;padding-right:12px;">Total</td><td style="text-align:right;">${fm(totalForPDF)}</td></tr>
   ${paidSoFar>0?`<tr><td colspan="3" style="text-align:right;padding-right:12px;color:#0F6E56;">Amount paid</td><td style="text-align:right;color:#0F6E56;">-${fm(paidSoFar)}</td></tr><tr class="balance"><td colspan="3" style="text-align:right;padding-right:12px;">Balance due</td><td style="text-align:right;">${fm(Math.max(0,totalForPDF-paidSoFar))}</td></tr>`:''}
 </tfoot>
 </table>
-${payH}${paymentInfoBlock}${doc.type==='estimate'?`<div style="background:#f8f7f4;border-left:3px solid ${ac};padding:10px 18px;font-size:11.5px;color:#444;margin-bottom:10px;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#aaa;font-weight:700;margin-bottom:6px;">ALL PRICES INCLUDE</div><div style="display:flex;flex-direction:column;gap:5px;line-height:1.5;"><div><span style="color:${ac};margin-right:8px;">&#10022;</span>Your original tapes returned to you</div><div><span style="color:${ac};margin-right:8px;">&#10022;</span>Footage transferred to a dedicated USB drive (Type A &amp; C)</div><div><span style="color:${ac};margin-right:8px;">&#10022;</span>Files labeled to match your tape names</div><div><span style="color:${ac};margin-right:8px;">&#10022;</span>I\'ll help you view them on any TV, computer, or laptop (up to 30 minutes)</div></div></div>`:''}${doc.notes?`<div class="notes">${doc.notes.replace(/\n/g,'<br>')}</div>`:''}
-${reviewH}<div class="foot">${footT}</div>
+${payH}${paymentInfoBlock}${inclH}${notesH}
+${reviewH}${thanksH}<div class="foot">${footT}</div>
 </div></body></html>`;
-  const win=window.open('','_blank','width=920,height=720');
-  if(win){win.document.write(html);win.document.close();setTimeout(()=>{win.focus();win.print();},900);toast('PDF ready — Print → Save as PDF');}
-  else toast('Allow popups to export PDF');
+  return html;
 }
 
 // INIT
