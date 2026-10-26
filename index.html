@@ -161,16 +161,60 @@ table.dt tr:hover td{background:var(--bg2);}
 .catalog-card:hover{background:var(--bg2);}
 .chart-wrap{position:relative;height:240px;}
 /* CLOUD: login screen + sync status */
-.auth-screen{position:fixed;inset:0;z-index:300;background:var(--bg3);display:flex;align-items:center;justify-content:center;padding:20px;}
-.auth-card{background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:30px 32px;width:380px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.12);}
-.auth-card .wordmark{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;line-height:1.2;}
-.auth-card .tagline{font-size:10px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin:3px 0 22px;}
-.auth-card form,.auth-card .auth-block{display:flex;flex-direction:column;gap:12px;}
-.auth-card p{font-size:13px;color:var(--text2);line-height:1.6;}
-.auth-msg{font-size:12.5px;color:var(--text2);margin-top:12px;min-height:16px;line-height:1.5;}
-.auth-msg.err{color:var(--red);}
-.auth-link{background:none;border:none;color:var(--accent);font-size:12.5px;cursor:pointer;text-align:left;padding:0;font-family:inherit;}
+.auth-screen{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;
+  background:radial-gradient(1100px 620px at 50% -10%,rgba(240,225,210,0.55),transparent 60%),linear-gradient(160deg,#7b9ca5 0%,#5f818b 48%,#4a6a74 100%);}
+/* film-strip edges with sprocket holes (decorative, drifts slowly) */
+.auth-screen::before,.auth-screen::after{content:"";position:fixed;top:0;bottom:0;width:52px;pointer-events:none;opacity:0.9;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='44'%3E%3Crect width='52' height='44' fill='%23314b53' fill-opacity='.38'/%3E%3Crect x='17' y='13' width='18' height='18' rx='4' fill='%23f0e1d2' fill-opacity='.22'/%3E%3C/svg%3E") repeat-y;
+  animation:auth-film 60s linear infinite;}
+.auth-screen::before{left:max(0px,calc(50% - 560px));}
+.auth-screen::after{right:max(0px,calc(50% - 560px));animation-direction:reverse;}
+@keyframes auth-film{from{background-position:0 0}to{background-position:0 440px}}
+.auth-card{position:relative;background:var(--bg);border:0.5px solid rgba(255,255,255,0.35);border-radius:18px;padding:34px 34px 28px;width:400px;max-width:100%;
+  box-shadow:0 2px 4px rgba(20,40,46,0.12),0 24px 60px rgba(20,40,46,0.35);animation:auth-rise 0.55s cubic-bezier(.2,.7,.2,1) both;}
+@keyframes auth-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.auth-card::before{content:"";position:absolute;left:34px;right:34px;top:0;height:3px;border-radius:0 0 3px 3px;background:linear-gradient(90deg,#5f818b,#d2a14f 55%,#f0e1d2);}
+.auth-logo{display:block;width:76px;height:76px;margin:0 auto 14px;border-radius:19px;box-shadow:0 6px 18px rgba(74,106,116,0.45);}
+.auth-card .wordmark{font-family:'Playfair Display',serif;font-size:27px;font-weight:700;line-height:1.2;text-align:center;letter-spacing:0.005em;margin-bottom:26px;}
+.auth-card form,.auth-card .auth-block{display:flex;flex-direction:column;gap:14px;}
+.auth-card p{font-size:14px;color:var(--text2);line-height:1.6;}
+.auth-card .field{gap:6px;}
+.auth-card .field label{font-size:12px;letter-spacing:0.06em;color:var(--text2);}
+.auth-card .field input{font-size:16px;padding:12px 14px;width:100%;border:1px solid var(--border2);border-radius:10px;background:var(--bg2);transition:border-color 0.15s,box-shadow 0.15s,background 0.15s;}
+.auth-card .field input:hover{border-color:rgba(95,129,139,0.7);}
+.auth-card .field input:focus{border-color:#5f818b;background:var(--bg);box-shadow:0 0 0 4px rgba(95,129,139,0.25);}
+.pw-wrap{position:relative;display:flex;}
+.pw-wrap input{padding-right:48px!important;}
+.pw-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:var(--text2);border-radius:8px;cursor:pointer;}
+.pw-toggle:hover{color:var(--text);background:rgba(95,129,139,0.14);}
+.pw-toggle:focus-visible,.auth-link:focus-visible,.auth-card .btn:focus-visible{outline:3px solid rgba(95,129,139,0.55);outline-offset:2px;}
+.pw-toggle svg{width:20px;height:20px;}
+.pw-toggle .pw-off{display:none;}
+.pw-toggle[aria-pressed="true"] .pw-on{display:none;}
+.pw-toggle[aria-pressed="true"] .pw-off{display:block;}
+.auth-card .btn{padding:12px 16px;font-size:15px;font-weight:700;border-radius:10px;min-height:46px;transition:background 0.15s,transform 0.1s,box-shadow 0.15s,opacity 0.15s;}
+.auth-card .btn.primary{background:linear-gradient(180deg,#5f818b,#4b6c76);box-shadow:0 4px 12px rgba(74,106,116,0.4);}
+.auth-card .btn.primary:hover{opacity:1;background:linear-gradient(180deg,#6a8d98,#547882);box-shadow:0 6px 16px rgba(74,106,116,0.5);}
+.auth-card .btn.primary:active{transform:translateY(1px);box-shadow:0 2px 6px rgba(74,106,116,0.4);}
+.auth-card .btn.primary:disabled{cursor:progress;opacity:0.85;}
+.auth-card .btn.primary:disabled::after{content:"";width:15px;height:15px;margin-left:10px;border:2px solid rgba(255,255,255,0.45);border-top-color:#fff;border-radius:50%;animation:auth-spin 0.7s linear infinite;}
+@keyframes auth-spin{to{transform:rotate(360deg)}}
+.auth-msg{font-size:13px;color:var(--text2);margin-top:14px;min-height:0;line-height:1.5;text-align:center;}
+.auth-msg:empty{display:none;}
+.auth-msg.err{color:var(--red);background:var(--red-bg);border:1px solid rgba(163,45,45,0.25);border-radius:10px;padding:10px 12px;text-align:left;}
+.auth-link{background:none;border:none;color:#456872;font-size:13.5px;cursor:pointer;text-align:center;padding:6px;font-family:inherit;border-radius:6px;}
 .auth-link:hover{text-decoration:underline;}
+@media(prefers-color-scheme:dark){.auth-link{color:#9dc0c9;}.auth-card{border-color:rgba(255,255,255,0.12);}}
+@media(max-width:480px){
+  .auth-screen{padding:16px;}
+  .auth-screen::before,.auth-screen::after{width:22px;background-size:22px 44px;opacity:0.7;}
+  .auth-card{padding:28px 22px 22px;border-radius:16px;}
+  .auth-card::before{left:22px;right:22px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .auth-screen::before,.auth-screen::after,.auth-card{animation:none;}
+  .auth-card .btn.primary:disabled::after{animation-duration:2s;}
+}
 .sidebar-foot{border-top:0.5px solid var(--border);padding:10px 0 6px;flex-shrink:0;}
 .cloud-status{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text2);padding:4px 18px;cursor:pointer;}
 .cloud-status .cs-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0;}
@@ -184,12 +228,12 @@ table.dt tr:hover td{background:var(--bg2);}
 <!-- LOGIN / LOADING SCREEN (shown until signed in and data is loaded) -->
 <div class="auth-screen" id="auth-screen">
   <div class="auth-card">
+    <img class="auth-logo" src="icon-192.png" width="76" height="76" alt="">
     <div class="wordmark">C3 Collective</div>
-    <div class="tagline">Business Manager</div>
     <div id="auth-loading" class="auth-block"><p>Loading…</p></div>
     <form id="auth-form" class="hidden" onsubmit="return doLogin(event)">
       <div class="field"><label for="auth-email">Email</label><input id="auth-email" type="email" autocomplete="username" required></div>
-      <div class="field"><label for="auth-pass">Password</label><input id="auth-pass" type="password" autocomplete="current-password" required></div>
+      <div class="field"><label for="auth-pass">Password</label><div class="pw-wrap"><input id="auth-pass" type="password" autocomplete="current-password" required><button class="pw-toggle" type="button" aria-label="Show password" aria-pressed="false" onclick="var i=document.getElementById('auth-pass'),h=i.type==='password';i.type=h?'text':'password';this.setAttribute('aria-pressed',h);this.setAttribute('aria-label',h?'Hide password':'Show password');"><svg class="pw-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="pw-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.5 10.5 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.1 4M6.6 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7a10 10 0 0 0 4.4-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button></div></div>
       <button class="btn primary" id="auth-btn" type="submit" style="justify-content:center;">Sign in</button>
       <button class="auth-link" type="button" onclick="doReset()">Forgot password?</button>
     </form>
@@ -208,7 +252,7 @@ table.dt tr:hover td{background:var(--bg2);}
     <div id="auth-fail" class="auth-block hidden">
       <button class="btn primary" type="button" onclick="location.reload()" style="justify-content:center;">Try again</button>
     </div>
-    <div id="auth-msg" class="auth-msg"></div>
+    <div id="auth-msg" class="auth-msg" role="status" aria-live="polite"></div>
   </div>
 </div>
 
