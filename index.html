@@ -1,0 +1,2263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C3 Collective</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@400;500;600;700&family=Merriweather:wght@300;400;700&family=EB+Garamond:wght@400;500;600&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#fff;--bg2:#f6f5f2;--bg3:#eceae5;
+  --text:#1a1a1a;--text2:#666;--text3:#999;
+  --border:rgba(0,0,0,0.11);--border2:rgba(0,0,0,0.2);
+  --radius:7px;--radius-lg:12px;--accent:#2C4A7C;
+  --green:#0F6E56;--green-bg:#d6f5e3;
+  --red:#A32D2D;--red-bg:#ffeaea;
+  --amber:#854F0B;--amber-bg:#fff3d6;
+  --blue:#185FA5;--blue-bg:#dbeeff;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#3a3a3c;--text:#f0f0f0;--text2:#aaa;--text3:#666;
+  --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.2);
+  --green-bg:#083328;--red-bg:#3d0a0a;--amber-bg:#3d2800;--blue-bg:#0c3357;}
+}
+body{font-family:'Lato',-apple-system,sans-serif;background:var(--bg3);color:var(--text);font-size:14px;}
+.app{display:flex;height:100vh;max-width:1280px;margin:0 auto;background:var(--bg);box-shadow:0 0 60px rgba(0,0,0,0.13);}
+
+/* SIDEBAR */
+.sidebar{width:230px;flex-shrink:0;border-right:0.5px solid var(--border);background:var(--bg2);display:flex;flex-direction:column;overflow-y:auto;}
+.sidebar-logo{padding:20px 18px 16px;border-bottom:0.5px solid var(--border);flex-shrink:0;}
+.sidebar-logo .wordmark{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;letter-spacing:0.01em;line-height:1.2;}
+.sidebar-logo .tagline{font-size:10px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-top:3px;}
+.nav-section{padding:8px 0;flex:1;}
+.nav-group{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.09em;font-weight:700;padding:10px 18px 4px;}
+.nav-item{padding:9px 18px;font-size:13px;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:10px;border-left:2px solid transparent;transition:all 0.12s;}
+.nav-item:hover{background:var(--bg);color:var(--text);}
+.nav-item.active{color:var(--text);background:var(--bg);border-left-color:var(--accent);font-weight:600;}
+.nav-item i{font-size:16px;}
+.nav-divider{height:0.5px;background:var(--border);margin:6px 18px;}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;min-width:0;}
+.topbar{padding:14px 26px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:10;}
+.topbar h1{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;}
+.btn{padding:7px 14px;font-size:13px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit;transition:background 0.12s;white-space:nowrap;}
+.btn:hover{background:var(--bg2);}
+.btn.primary{background:var(--accent);color:#fff;border-color:transparent;}
+.btn.primary:hover{opacity:0.88;}
+.btn.success{background:var(--green);color:#fff;border-color:transparent;}
+.btn.success:hover{opacity:0.88;}
+.btn.danger{background:var(--red);color:#fff;border-color:transparent;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.content{padding:26px;flex:1;}
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:16px;}
+.section-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:13px;font-weight:700;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;}
+.field input,.field select,.field textarea{font-size:13px;padding:8px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none;transition:border-color 0.12s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(44,74,124,0.1);}
+.field textarea{resize:vertical;min-height:64px;}
+
+/* DATE FIELDS */
+input[type="date"]{color-scheme:light;position:relative;}
+@media(prefers-color-scheme:dark){input[type="date"]{color-scheme:dark;}}
+input[type="date"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:0.5;border-radius:4px;padding:3px;margin-right:-2px;transition:opacity 0.12s,background 0.12s;}
+input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:1;background:var(--bg2);}
+.date-input-wrap{display:flex;gap:6px;align-items:stretch;}
+.date-input-wrap input[type="date"]{flex:1;min-width:0;}
+.date-today-btn{flex-shrink:0;padding:0 12px;font-size:11px;font-weight:600;letter-spacing:0.02em;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text2);cursor:pointer;font-family:inherit;white-space:nowrap;transition:background 0.12s,color 0.12s,border-color 0.12s;}
+.date-today-btn:hover{background:var(--accent);color:#fff;border-color:transparent;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle{position:relative;width:38px;height:22px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-track{position:absolute;inset:0;background:var(--bg3);border-radius:99px;border:0.5px solid var(--border2);cursor:pointer;transition:background 0.2s;}
+.toggle input:checked+.toggle-track{background:var(--accent);border-color:var(--accent);}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;pointer-events:none;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.toggle input:checked~.toggle-thumb{transform:translateX(16px);}
+table.items{width:100%;border-collapse:collapse;font-size:13px;}
+table.items th{text-align:left;padding:8px 10px;font-weight:700;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:0.05em;border-bottom:0.5px solid var(--border);}
+table.items td{padding:6px 4px;vertical-align:middle;border-bottom:0.5px solid var(--border);}
+table.items td input{width:100%;border:none;background:transparent;font-size:13px;color:var(--text);padding:5px 6px;font-family:inherit;outline:none;border-radius:4px;}
+table.items td input:focus{background:var(--bg2);}
+.totals{margin-top:16px;}
+.total-row{display:flex;justify-content:flex-end;gap:40px;padding:4px 0;color:var(--text2);font-size:13px;}
+.total-row span:last-child{min-width:90px;text-align:right;}
+.total-row.grand{font-weight:700;color:var(--text);font-size:16px;padding-top:10px;border-top:0.5px solid var(--border);}
+table.dt{width:100%;border-collapse:collapse;font-size:13px;}
+table.dt th{text-align:left;padding:9px 12px;font-weight:700;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:0.05em;border-bottom:0.5px solid var(--border);background:var(--bg2);}
+table.dt td{padding:11px 12px;border-bottom:0.5px solid var(--border);vertical-align:middle;}
+table.dt tr:last-child td{border-bottom:none;}
+table.dt tr:hover td{background:var(--bg2);}
+.badge{display:inline-block;font-size:11px;padding:3px 9px;border-radius:3px;font-weight:700;letter-spacing:0.04em;white-space:nowrap;}
+.badge.draft{background:var(--bg3);color:var(--text2);}
+.badge.sent{background:var(--blue-bg);color:var(--blue);}
+.badge.paid{background:var(--green-bg);color:var(--green);}
+.badge.overdue{background:var(--red-bg);color:var(--red);}
+.badge.partial{background:var(--amber-bg);color:var(--amber);}
+.badge.approved{background:var(--green-bg);color:var(--green);}
+.badge.estimate{background:var(--amber-bg);color:var(--amber);}
+.doc-list{display:flex;flex-direction:column;gap:8px;}
+.doc-row{display:flex;align-items:center;padding:13px 16px;border:0.5px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;gap:12px;transition:background 0.1s;}
+.doc-row:hover{background:var(--bg2);}
+.doc-info{flex:1;min-width:0;}
+.doc-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.doc-sub{font-size:12px;color:var(--text2);margin-top:2px;}
+.doc-amount{font-size:14px;font-weight:700;min-width:80px;text-align:right;}
+.metric{background:var(--bg2);border-radius:var(--radius);padding:14px 18px;border-left:3px solid var(--accent);}
+.metric.green{border-left-color:var(--green);}
+.metric.red{border-left-color:var(--red);}
+.metric.amber{border-left-color:#BA7517;}
+.metric .label{font-size:11px;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;}
+.metric .value{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;}
+.metric .sub{font-size:11px;color:var(--text2);margin-top:3px;}
+.client-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.client-card{border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;transition:background 0.1s;}
+.client-card:hover{background:var(--bg2);}
+.avatar{width:36px;height:36px;border-radius:50%;background:#e8edf5;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#2C4A7C;flex-shrink:0;font-family:'Playfair Display',serif;}
+@media(prefers-color-scheme:dark){.avatar{background:#1a2a40;color:#85B7EB;}}
+.logo-preview{width:72px;height:72px;border:1.5px dashed var(--border2);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:var(--bg2);flex-shrink:0;}
+.logo-preview img{width:100%;height:100%;object-fit:contain;}
+.tab-bar{display:flex;gap:2px;padding:0 26px;border-bottom:0.5px solid var(--border);background:var(--bg);}
+.tab{padding:10px 14px;font-size:13px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-0.5px;transition:color 0.12s;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--text);border-bottom-color:var(--accent);font-weight:600;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:100;}
+.modal{background:var(--bg);border-radius:var(--radius-lg);padding:26px;width:440px;border:0.5px solid var(--border2);max-height:90vh;overflow-y:auto;}
+.modal h2{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:18px;}
+.hidden{display:none!important;}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px 16px;font-size:13px;display:flex;align-items:center;gap:8px;opacity:0;transition:opacity 0.2s;pointer-events:none;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,0.12);}
+.toast.show{opacity:1;}
+.color-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color 0.12s;flex-shrink:0;}
+.empty-state{color:var(--text2);font-size:13px;padding:20px;text-align:center;}
+.del{padding:5px 8px;border:none;background:transparent;cursor:pointer;color:var(--text3);border-radius:var(--radius);flex-shrink:0;}
+.del:hover{background:var(--red-bg);color:var(--red);}
+.aging-box{background:var(--bg2);border-radius:var(--radius);padding:14px 16px;text-align:center;}
+.aging-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;}
+.aging-val{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;}
+.font-prev{font-size:13px;color:var(--text2);margin-top:6px;padding:6px 10px;background:var(--bg2);border-radius:var(--radius);}
+.wm-prev{display:inline-block;border:2px solid;padding:2px 10px;font-size:12px;font-weight:700;letter-spacing:0.1em;border-radius:3px;}
+.pl-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px;}
+.pl-row:last-child{border-bottom:none;}
+.pl-row.total{font-weight:700;font-size:15px;padding-top:12px;border-top:2px solid var(--border);}
+.pl-row.income{color:var(--green);}
+.pl-row.expense{color:var(--red);}
+.catalog-card{border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px 16px;display:flex;align-items:center;gap:12px;transition:background 0.1s;}
+.catalog-card:hover{background:var(--bg2);}
+.chart-wrap{position:relative;height:240px;}
+/* CLOUD: login screen + sync status */
+.auth-screen{position:fixed;inset:0;z-index:300;background:var(--bg3);display:flex;align-items:center;justify-content:center;padding:20px;}
+.auth-card{background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:30px 32px;width:380px;max-width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.12);}
+.auth-card .wordmark{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;line-height:1.2;}
+.auth-card .tagline{font-size:10px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin:3px 0 22px;}
+.auth-card form,.auth-card .auth-block{display:flex;flex-direction:column;gap:12px;}
+.auth-card p{font-size:13px;color:var(--text2);line-height:1.6;}
+.auth-msg{font-size:12.5px;color:var(--text2);margin-top:12px;min-height:16px;line-height:1.5;}
+.auth-msg.err{color:var(--red);}
+.auth-link{background:none;border:none;color:var(--accent);font-size:12.5px;cursor:pointer;text-align:left;padding:0;font-family:inherit;}
+.auth-link:hover{text-decoration:underline;}
+.sidebar-foot{border-top:0.5px solid var(--border);padding:10px 0 6px;flex-shrink:0;}
+.cloud-status{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text2);padding:4px 18px;cursor:pointer;}
+.cloud-status .cs-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+.cloud-status.cs-saved .cs-dot{background:var(--green);}
+.cloud-status.cs-saving .cs-dot,.cloud-status.cs-connecting .cs-dot{background:#BA7517;}
+.cloud-status.cs-offline .cs-dot,.cloud-status.cs-error .cs-dot{background:var(--red);}
+.cs-user{font-size:11px;color:var(--text3);padding:0 18px 4px 34px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+</style>
+</head>
+<body>
+<!-- LOGIN / LOADING SCREEN (shown until signed in and data is loaded) -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-card">
+    <div class="wordmark">C3 Collective</div>
+    <div class="tagline">Business Manager</div>
+    <div id="auth-loading" class="auth-block"><p>Loading…</p></div>
+    <form id="auth-form" class="hidden" onsubmit="return doLogin(event)">
+      <div class="field"><label for="auth-email">Email</label><input id="auth-email" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="auth-pass">Password</label><input id="auth-pass" type="password" autocomplete="current-password" required></div>
+      <button class="btn primary" id="auth-btn" type="submit" style="justify-content:center;">Sign in</button>
+      <button class="auth-link" type="button" onclick="doReset()">Forgot password?</button>
+    </form>
+    <form id="auth-recovery" class="hidden" onsubmit="return doNewPassword(event)">
+      <div class="field"><label for="auth-newpass">New password</label><input id="auth-newpass" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div class="field"><label for="auth-newpass2">Repeat new password</label><input id="auth-newpass2" type="password" autocomplete="new-password" minlength="8" required></div>
+      <button class="btn primary" type="submit" style="justify-content:center;">Save new password</button>
+    </form>
+    <div id="auth-migrate" class="auth-block hidden">
+      <p><strong>Data found on this computer.</strong> Your cloud account is empty, but this browser has saved C3 data:</p>
+      <p id="mig-summary" style="color:var(--text);"></p>
+      <p>Upload it to your cloud account now? (A copy also stays on this device.)</p>
+      <button class="btn primary" id="mig-yes" type="button" style="justify-content:center;">Upload to cloud</button>
+      <button class="btn" id="mig-no" type="button" style="justify-content:center;">Skip – start empty</button>
+    </div>
+    <div id="auth-fail" class="auth-block hidden">
+      <button class="btn primary" type="button" onclick="location.reload()" style="justify-content:center;">Try again</button>
+    </div>
+    <div id="auth-msg" class="auth-msg"></div>
+  </div>
+</div>
+
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="wordmark">C3 Collective</div>
+    <div class="tagline">Business Manager</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-group">Overview</div>
+    <div class="nav-item active" onclick="go('dashboard')" id="nav-dashboard"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
+    <div class="nav-item" onclick="go('pl')" id="nav-pl"><i class="ti ti-report-analytics"></i> Profit &amp; loss</div>
+    <div class="nav-item" onclick="go('ar')" id="nav-ar"><i class="ti ti-cash"></i> Accounts receivable</div>
+    <div class="nav-item" onclick="go('payments')" id="nav-payments"><i class="ti ti-history"></i> Payment history</div>
+    <div class="nav-divider"></div>
+    <div class="nav-group">Money in</div>
+    <div class="nav-item" onclick="go('clients')" id="nav-clients"><i class="ti ti-users"></i> Clients</div>
+    <div class="nav-item" onclick="go('documents')" id="nav-documents"><i class="ti ti-file-text"></i> Documents</div>
+    <div class="nav-item" onclick="go('create')" id="nav-create"><i class="ti ti-plus"></i> New document</div>
+    <div class="nav-divider"></div>
+    <div class="nav-group">Money out</div>
+    <div class="nav-item" onclick="go('expenses')" id="nav-expenses"><i class="ti ti-receipt"></i> Expenses</div>
+    <div class="nav-item" onclick="go('recurring')" id="nav-recurring"><i class="ti ti-refresh"></i> Recurring</div>
+    <div class="nav-divider"></div>
+    <div class="nav-group">Settings</div>
+    <div class="nav-item" onclick="go('catalog')" id="nav-catalog"><i class="ti ti-package"></i> Product catalog</div>
+    <div class="nav-item" onclick="go('branding')" id="nav-branding"><i class="ti ti-building"></i> Company</div>
+    <div class="nav-item" onclick="go('appearance')" id="nav-appearance"><i class="ti ti-palette"></i> Output style</div>
+    <div class="nav-item" onclick="go('data')" id="nav-data"><i class="ti ti-database-export"></i> Data &amp; backup</div>
+  </div>
+  <div class="sidebar-foot">
+    <div class="cloud-status cs-connecting" id="cloud-status" onclick="cloudStatusClick()"><span class="cs-dot"></span><span id="cs-text">Connecting…</span></div>
+    <div class="cs-user" id="cs-user"></div>
+    <div class="nav-item" onclick="signOut()" id="nav-signout"><i class="ti ti-logout"></i> Sign out</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard">
+    <div class="topbar"><h1>Dashboard</h1>
+      <div class="btn-row">
+        <button class="btn primary" onclick="go('create')"><i class="ti ti-plus"></i> New document</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="grid4" style="margin-bottom:20px;">
+        <div class="metric"><div class="label">Total invoiced</div><div class="value" id="m-invoiced">$0</div></div>
+        <div class="metric green"><div class="label">Collected</div><div class="value" id="m-collected">$0</div></div>
+        <div class="metric red"><div class="label">Outstanding</div><div class="value" id="m-outstanding">$0</div></div>
+        <div class="metric amber"><div class="label">Total expenses</div><div class="value" id="m-expenses">$0</div></div>
+      </div>
+      <div class="grid2" style="margin-bottom:20px;">
+        <div class="card" style="margin-bottom:0;">
+          <div class="section-label">Revenue vs expenses (last 6 months)</div>
+          <div class="chart-wrap"><canvas id="chart-rev-exp"></canvas></div>
+        </div>
+        <div class="card" style="margin-bottom:0;">
+          <div class="section-label">Invoice status breakdown</div>
+          <div class="chart-wrap"><canvas id="chart-status"></canvas></div>
+        </div>
+      </div>
+      <div class="section-label">Recent documents</div>
+      <div class="doc-list" id="recent-docs"></div>
+    </div>
+  </div>
+
+  <!-- PROFIT & LOSS -->
+  <div id="page-pl" class="hidden">
+    <div class="topbar"><h1>Profit &amp; loss</h1>
+      <div class="btn-row">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="btn" id="pl-btn-all" onclick="setPLMode('all')">All time</button>
+          <select id="pl-year" onchange="setPLMode('year',+this.value)" style="font-size:13px;padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;"></select>
+          <button class="btn" onclick="exportPLcsv()"><i class="ti ti-download"></i> Export CSV</button>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="grid3" style="margin-bottom:20px;">
+        <div class="metric green"><div class="label">Total income</div><div class="value" id="pl-income">$0</div></div>
+        <div class="metric red"><div class="label">Total expenses</div><div class="value" id="pl-exp">$0</div></div>
+        <div class="metric"><div class="label">Net profit</div><div class="value" id="pl-net">$0</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card" style="margin-bottom:0;">
+          <div class="section-label">Monthly breakdown</div>
+          <div class="chart-wrap"><canvas id="chart-pl-monthly"></canvas></div>
+        </div>
+        <div class="card" style="margin-bottom:0;">
+          <div class="section-label">Expenses by category</div>
+          <div class="chart-wrap"><canvas id="chart-exp-cat"></canvas></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px;">
+        <div class="section-label">Income</div>
+        <div id="pl-income-rows"></div>
+        <div class="section-label" style="margin-top:20px;">Expenses</div>
+        <div id="pl-expense-rows"></div>
+        <div class="pl-row total" style="margin-top:8px;">
+          <span>Net profit / loss</span><span id="pl-net-row">$0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCOUNTS RECEIVABLE -->
+  <div id="page-ar" class="hidden">
+    <div class="topbar"><h1>Accounts receivable</h1>
+      <button class="btn primary" onclick="go('create')"><i class="ti ti-plus"></i> New invoice</button>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="section-label">Aging summary</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;" id="aging-boxes"></div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);">
+          <div class="section-label" style="margin:0;">Outstanding invoices</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn" style="font-size:12px;padding:5px 10px;" onclick="setArF('all')">All</button>
+            <button class="btn" style="font-size:12px;padding:5px 10px;" onclick="setArF('overdue')">Overdue</button>
+            <button class="btn" style="font-size:12px;padding:5px 10px;" onclick="setArF('current')">Current</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="dt"><thead><tr><th>Invoice</th><th>Client</th><th>Date</th><th>Due</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr></thead>
+          <tbody id="ar-tbody"></tbody></table>
+        </div>
+        <div id="ar-empty" class="empty-state hidden">No outstanding invoices — great work!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT HISTORY -->
+  <div id="page-payments" class="hidden">
+    <div class="topbar"><h1>Payment history</h1>
+      <button class="btn success" onclick="openPayFromHistory()"><i class="ti ti-plus"></i> Record payment</button>
+    </div>
+    <div class="content">
+      <div class="grid3" style="margin-bottom:20px;">
+        <div class="metric green"><div class="label">Total collected</div><div class="value" id="ph-total">$0</div><div class="sub" id="ph-count">0 payments</div></div>
+        <div class="metric"><div class="label">This month</div><div class="value" id="ph-month">$0</div></div>
+        <div class="metric"><div class="label">Average payment</div><div class="value" id="ph-avg">$0</div></div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="dt"><thead><tr><th>Date</th><th>Invoice</th><th>Client</th><th>Method</th><th>Reference</th><th style="text-align:right;">Amount</th><th></th></tr></thead>
+        <tbody id="ph-tbody"></tbody></table>
+        <div id="ph-empty" class="empty-state hidden">No payments recorded yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENTS -->
+  <div id="page-clients" class="hidden">
+    <div class="topbar"><h1>Clients</h1>
+      <button class="btn primary" onclick="openModal('modal-client')"><i class="ti ti-plus"></i> Add client</button>
+    </div>
+    <div class="content"><div class="client-grid" id="client-list"></div></div>
+  </div>
+
+  <!-- DOCUMENTS -->
+  <div id="page-documents" class="hidden">
+    <div class="topbar"><h1>Documents</h1>
+      <button class="btn primary" onclick="go('create')"><i class="ti ti-plus"></i> New</button>
+    </div>
+    <div class="tab-bar">
+      <div class="tab active" onclick="filterDocs('all',this)">All</div>
+      <div class="tab" onclick="filterDocs('invoice',this)">Invoices</div>
+      <div class="tab" onclick="filterDocs('estimate',this)">Estimates</div>
+    </div>
+    <div class="content"><div class="doc-list" id="doc-list"></div></div>
+  </div>
+
+  <!-- CREATE -->
+  <div id="page-create" class="hidden">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="doc-type-toggle" style="display:flex;border:0.5px solid var(--border2);border-radius:var(--radius);overflow:hidden;">
+          <button id="toggle-invoice" onclick="setDocType('invoice')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all 0.12s;background:var(--accent);color:#fff;font-family:inherit;">Invoice</button>
+          <button id="toggle-estimate" onclick="setDocType('estimate')" style="padding:6px 14px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all 0.12s;background:var(--bg);color:var(--text2);font-family:inherit;">Estimate</button>
+        </div>
+        <span id="doc-number-display" style="font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--text3);"></span>
+        <div id="save-indicator" style="display:none;align-items:center;gap:5px;font-size:12px;color:var(--green);"><i class="ti ti-circle-check" style="font-size:15px;"></i> Saved</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="newDocument()"><i class="ti ti-plus"></i> New</button>
+        <button class="btn" onclick="saveDoc('draft')"><i class="ti ti-device-floppy"></i> Save</button>
+        <button class="btn primary" onclick="exportPDF()"><i class="ti ti-download"></i> Export PDF</button>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- Client + Dates row -->
+      <div class="card" style="margin-bottom:12px;">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px;align-items:end;">
+          <div class="field">
+            <label>Client</label>
+            <select id="doc-client" style="font-size:14px;padding:9px 10px;"><option value="">— select client —</option></select>
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <div class="date-input-wrap">
+              <input type="date" id="doc-date" style="font-size:13px;">
+              <button type="button" class="date-today-btn" onclick="setToday('doc-date')">Today</button>
+            </div>
+          </div>
+          <div class="field">
+            <label id="due-label">Due date</label>
+            <div class="date-input-wrap">
+              <input type="date" id="doc-due" style="font-size:13px;">
+              <button type="button" class="date-today-btn" onclick="setToday('doc-due')">Today</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Line items card -->
+      <div class="card" style="margin-bottom:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);">Line items</div>
+          <button class="btn" style="font-size:12px;padding:5px 10px;" onclick="openCatalogPick()"><i class="ti ti-package"></i> Add from catalog</button>
+        </div>
+        <table class="items" style="margin-bottom:0;">
+          <thead><tr>
+            <th style="width:46%;">Description</th>
+            <th style="width:12%;">Qty</th>
+            <th style="width:18%;">Unit price</th>
+            <th style="width:16%;">Total</th>
+            <th style="width:8%;"></th>
+          </tr></thead>
+          <tbody id="line-items"></tbody>
+        </table>
+        <button class="btn" style="margin-top:10px;font-size:12px;" onclick="addLine()"><i class="ti ti-plus"></i> Add line item</button>
+      </div>
+
+      <!-- Totals + discount/tax -->
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:12px;margin-bottom:12px;">
+        <!-- Notes -->
+        <div class="card" style="margin-bottom:0;">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:10px;">Notes</div>
+          <textarea id="doc-notes" placeholder="Payment terms, special instructions, thank you message…" style="width:100%;min-height:130px;font-size:13px;padding:10px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;resize:vertical;outline:none;line-height:1.6;"></textarea>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px;">Line breaks are preserved on exported PDFs.</div>
+        </div>
+        <!-- Totals -->
+        <div class="card" style="margin-bottom:0;">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:14px;">Summary</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);">
+              <span>Subtotal</span><span id="subtotal">$0.00</span>
+            </div>
+            <div style="border-top:0.5px solid var(--border);padding-top:10px;">
+              <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:8px;">Discount</div>
+              <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+                <button id="disc-type-dollar" onclick="setDiscType('dollar')" style="padding:4px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:4px;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;font-weight:600;">$</button>
+                <button id="disc-type-pct" onclick="setDiscType('pct')" style="padding:4px 10px;font-size:12px;border:0.5px solid var(--border2);border-radius:4px;background:var(--bg);color:var(--text2);cursor:pointer;font-family:inherit;font-weight:600;">%</button>
+                <input id="discount-amount" type="number" min="0" step="0.01" value="0" oninput="updateTotals()" placeholder="0" style="flex:1;min-width:0;font-size:13px;padding:5px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none;">
+                <span id="discount-display" style="font-size:13px;color:var(--red);min-width:52px;text-align:right;">-$0.00</span>
+              </div>
+            </div>
+            <div style="border-top:0.5px solid var(--border);padding-top:10px;">
+              <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:8px;">Tax</div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <input id="tax-rate" type="number" min="0" max="100" value="0" oninput="updateTotals()" placeholder="0" style="width:60px;font-size:13px;padding:5px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none;">
+                <span style="font-size:13px;color:var(--text2);">%</span>
+                <span id="tax-amount" style="margin-left:auto;font-size:13px;color:var(--text2);">$0.00</span>
+              </div>
+            </div>
+            <div style="border-top:1.5px solid var(--border);padding-top:12px;display:flex;justify-content:space-between;align-items:baseline;">
+              <span style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700;">Total</span>
+              <span id="grand-total" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--accent);">$0.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden fields still needed by JS -->
+      <input type="hidden" id="doc-type" value="invoice">
+      <input type="hidden" id="doc-number" value="">
+      <input type="hidden" id="doc-status" value="draft">
+
+    </div>
+  </div>
+
+  <!-- EXPENSES -->
+  <div id="page-expenses" class="hidden">
+    <div class="topbar"><h1>Expenses</h1>
+      <div class="btn-row">
+        <button class="btn" onclick="go('recurring')"><i class="ti ti-refresh"></i> Recurring</button>
+        <button class="btn primary" onclick="openNewExpense()"><i class="ti ti-plus"></i> Add expense</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="grid4" style="margin-bottom:20px;" id="exp-metrics"></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 20px 12px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:10px;">
+          <div class="section-label" style="margin:0;flex:1;">All expenses</div>
+          <select id="exp-sort" onchange="renderExpenses()" style="font-size:12px;padding:5px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">
+            <option value="date-desc">Date: newest first</option>
+            <option value="date-asc">Date: oldest first</option>
+            <option value="amount-desc">Amount: high to low</option>
+            <option value="amount-asc">Amount: low to high</option>
+          </select>
+          <select id="exp-filter-cat" onchange="renderExpenses()" style="font-size:12px;padding:5px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">
+            <option value="">All categories</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="dt"><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Vendor</th><th>Deductible</th><th style="text-align:right;">Amount</th><th></th></tr></thead>
+          <tbody id="exp-tbody"></tbody></table>
+        </div>
+        <div id="exp-empty" class="empty-state hidden">No expenses yet. Start logging your business costs!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECURRING EXPENSES -->
+  <div id="page-recurring" class="hidden">
+    <div class="topbar"><h1>Recurring expenses</h1>
+      <button class="btn primary" onclick="openNewExpense(true)"><i class="ti ti-plus"></i> Add recurring</button>
+    </div>
+    <div class="content">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">Recurring expenses are automatically logged each month. The app checks on startup and adds any that are due.</div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="dt"><thead><tr><th>Description</th><th>Category</th><th>Vendor</th><th>Day of month</th><th>End date</th><th>Deductible</th><th style="text-align:right;">Amount</th><th></th></tr></thead>
+        <tbody id="recurring-tbody"></tbody></table>
+        <div id="recurring-empty" class="empty-state hidden">No recurring expenses set up yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCT CATALOG -->
+  <div id="page-catalog" class="hidden">
+    <div class="topbar"><h1>Product &amp; service catalog</h1>
+      <button class="btn primary" onclick="openModal('modal-catalog')"><i class="ti ti-plus"></i> Add item</button>
+    </div>
+    <div class="content">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;">Save frequently used products and services so you can quickly add them to any invoice or estimate.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;" id="catalog-grid"></div>
+      <div id="catalog-empty" class="empty-state hidden">No catalog items yet. Add your products and services!</div>
+    </div>
+  </div>
+
+  <!-- COMPANY -->
+  <div id="page-branding" class="hidden">
+    <div class="topbar"><h1>Company</h1><button class="btn primary" onclick="saveBranding()"><i class="ti ti-check"></i> Save</button></div>
+    <div class="content">
+      <div class="card">
+        <div class="section-label">Company info</div>
+        <div class="grid2" style="gap:14px;">
+          <div class="field"><label>Company name</label><input id="b-company" placeholder="C3 Collective"></div>
+          <div class="field"><label>Email</label><input id="b-email" placeholder="billing@c3collective.com"></div>
+          <div class="field"><label>Phone</label><input id="b-phone" placeholder="+1 555 000 0000"></div>
+          <div class="field"><label>Website</label><input id="b-website" placeholder="c3collectiveny.com"></div>
+          <div class="field" style="grid-column:1/-1;"><label>Address</label><textarea id="b-address" placeholder="123 Business Ave&#10;City, State 12345"></textarea></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-label">Payment instructions</div>
+        <div class="field"><label>Payment instructions shown on invoices</label><textarea id="b-paymentInfo" rows="5" placeholder="Payment can be made electronically.&#10;Venmo: @yourhandle&#10;Zelle: you@example.com"></textarea></div>
+        <div style="font-size:12px;color:var(--text2);margin-top:8px;">Plain text, one item per line. Printed on invoices only. Leave empty to hide the payment block.</div>
+      </div>
+      <div class="card">
+        <div class="section-label">Logo</div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div class="logo-preview" id="logo-preview" onclick="document.getElementById('logo-upload').click()">
+            <i class="ti ti-photo" id="logo-placeholder" style="font-size:24px;color:var(--text3);"></i>
+          </div>
+          <div>
+            <button class="btn" onclick="document.getElementById('logo-upload').click()"><i class="ti ti-upload"></i> Upload logo</button>
+            <input type="file" id="logo-upload" accept="image/*" style="display:none;" onchange="previewLogo(event)">
+            <button class="btn" style="margin-left:6px;" onclick="removeLogo()"><i class="ti ti-trash"></i> Remove</button>
+            <div style="font-size:12px;color:var(--text2);margin-top:8px;">PNG, JPG or SVG. Appears on exported PDFs.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTPUT STYLE -->
+  <div id="page-appearance" class="hidden">
+    <div class="topbar"><h1>Output style</h1><button class="btn primary" onclick="saveAppearance()"><i class="ti ti-check"></i> Save</button></div>
+    <div class="content">
+      <div class="card">
+        <div class="section-label">Colors</div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div><div style="font-size:13px;font-weight:600;margin-bottom:8px;">Accent color</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <div id="accent-sw" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+              <input type="color" id="ap-accent" style="width:32px;height:32px;border:0.5px solid var(--border2);border-radius:var(--radius);padding:2px;cursor:pointer;" onchange="setAccent(this.value,false)">
+            </div>
+          </div>
+          <div><div style="font-size:13px;font-weight:600;margin-bottom:8px;">Header background</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <div id="header-sw" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+              <input type="color" id="ap-hbg" style="width:32px;height:32px;border:0.5px solid var(--border2);border-radius:var(--radius);padding:2px;cursor:pointer;" onchange="setHBg(this.value,false)">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-label">Document font</div>
+        <div class="field"><label>Font family</label>
+          <select id="ap-font" onchange="updateFontPrev()">
+            <option value="Georgia,'Times New Roman',serif">Georgia (classic serif)</option>
+            <option value="'Playfair Display',Georgia,serif">Playfair Display (elegant)</option>
+            <option value="'EB Garamond',Garamond,serif">EB Garamond (literary)</option>
+            <option value="'Libre Baskerville',Georgia,serif">Libre Baskerville (editorial)</option>
+            <option value="'Merriweather',Georgia,serif">Merriweather (readable)</option>
+            <option value="'Lato',Helvetica,sans-serif">Lato (modern sans)</option>
+            <option value="'Montserrat',Helvetica,sans-serif">Montserrat (clean sans)</option>
+          </select>
+        </div>
+        <div class="font-prev" id="font-prev">The quick brown fox — Invoice #INV-001 — C3 Collective</div>
+      </div>
+      <div class="card">
+        <div class="section-label">Header elements</div>
+        <div class="toggle-row">
+          <div><div style="font-size:13px;">Show logo</div><div style="font-size:11px;color:var(--text2);">Display logo at top of documents</div></div>
+          <label class="toggle"><input type="checkbox" id="ap-logo" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="toggle-row">
+          <div><div style="font-size:13px;">Show company address</div><div style="font-size:11px;color:var(--text2);">Include address, email and phone</div></div>
+          <label class="toggle"><input type="checkbox" id="ap-addr" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-label">Footer</div>
+        <div class="field"><label>Footer tagline</label><input id="ap-footer" placeholder="Thank you for your business"></div>
+      </div>
+      <div class="card">
+        <div class="section-label">Google review request</div>
+        <div class="toggle-row" style="margin-bottom:12px;">
+          <div><div style="font-size:13px;">Show review request on PDFs</div><div style="font-size:11px;color:var(--text2);">Adds a short note asking clients to leave a Google review</div></div>
+          <label class="toggle"><input type="checkbox" id="ap-review"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="field"><label>Google review link (optional)</label><input id="ap-review-link" placeholder="https://g.page/r/your-review-link/review"></div>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px;">Leave blank to show the note without a clickable link. Find your link in your Google Business Profile under "Ask for reviews."</div>
+      </div>
+      <div class="card">
+        <div class="section-label">Watermark</div>
+        <div class="toggle-row" style="margin-bottom:12px;">
+          <div><div style="font-size:13px;">Enable watermark</div></div>
+          <label class="toggle"><input type="checkbox" id="ap-wm" onchange="updateWmPrev()"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="grid2" style="gap:12px;margin-bottom:12px;">
+          <div class="field"><label>Text</label>
+            <select id="ap-wmt" onchange="updateWmPrev()"><option>DRAFT</option><option>PAID</option><option>VOID</option><option>CONFIDENTIAL</option><option>SAMPLE</option></select>
+          </div>
+          <div class="field"><label>Color</label>
+            <select id="ap-wmc" onchange="updateWmPrev()">
+              <option value="#cccccc">Light gray</option><option value="#E24B4A">Red</option><option value="#378ADD">Blue</option><option value="#1D9E75">Green</option><option value="#BA7517">Amber</option>
+            </select>
+          </div>
+        </div>
+        <div style="background:var(--bg2);border-radius:var(--radius);padding:20px;display:flex;align-items:center;justify-content:center;">
+          <span class="wm-prev" id="wm-prev" style="color:#cccccc;border-color:#cccccc;opacity:0.3;">DRAFT</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA & BACKUP -->
+  <div id="page-data" class="hidden">
+    <div class="topbar"><h1>Data &amp; backup</h1></div>
+    <div class="content">
+      <div class="card">
+        <div class="section-label">Export your data</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">Download all your clients, invoices, estimates, payments, and expenses as a single backup file. Store it in iCloud Drive, Google Drive, or anywhere safe. You can restore from this file at any time.</p>
+        <button class="btn success" onclick="exportData()"><i class="ti ti-download"></i> Download backup (.json)</button>
+      </div>
+      <div class="card">
+        <div class="section-label">Import / restore data</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">Restore from a previously exported backup file. <strong>This will replace all current data</strong> (in the cloud too) — make sure to export first if you want to keep your current records.</p>
+        <button class="btn" onclick="document.getElementById('import-file').click()"><i class="ti ti-upload"></i> Import backup file</button>
+        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
+      </div>
+      <div class="card">
+        <div class="section-label">Data storage info</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.8;">
+          <div>☁️ Your data is saved to your <strong>private cloud account</strong> (Supabase) every time you make a change</div>
+          <div>🔒 Only you can read it, and only after signing in. This browser also keeps a working copy as a fallback</div>
+          <div>✅ Clearing browser data just signs you out; sign back in and everything is restored from the cloud</div>
+          <div>🕒 Last cloud sync: <strong id="last-sync">—</strong> <button class="btn" style="padding:2px 10px;font-size:12px;margin-left:8px;" onclick="if(syncer)syncer.flush()">Sync now</button></div>
+          <div>💾 Keep downloading a backup file now and then as your own extra copy</div>
+          <div style="margin-top:12px;" id="data-stats"></div>
+        </div>
+      </div>
+      <div class="card hidden" id="legacy-card">
+        <div class="section-label">Older data from this browser</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">A copy of the data this browser held before cloud saving was turned on is still stored here. Download it if you ever need it, then use "Import backup file" to bring it into your cloud account.</p>
+        <button class="btn" onclick="downloadLegacy()"><i class="ti ti-download"></i> Download older local copy (.json)</button>
+      </div>
+    </div>
+  </div>
+
+<!-- MODALS -->
+<div class="overlay hidden" id="modal-client">
+  <div class="modal">
+    <h2 id="client-modal-title">Add client</h2>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="field"><label>Name *</label><input id="c-name" placeholder="Acme Corp"></div>
+      <div class="field"><label>Email</label><input id="c-email" placeholder="hello@acme.com" type="email"></div>
+      <div class="field"><label>Phone</label><input id="c-phone" placeholder="+1 (555) 000-0000"></div>
+      <div class="field"><label>Address</label><textarea id="c-address" placeholder="123 Main St&#10;City, State 12345"></textarea></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('modal-client')">Cancel</button>
+      <button class="btn primary" onclick="saveClient()">Save client</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="modal-pay">
+  <div class="modal" style="width:500px;">
+    <h2>Record payment</h2>
+    <div id="rp-info" style="background:var(--bg2);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:13px;line-height:1.6;"></div>
+    <div class="field" style="margin-bottom:14px;"><label>Payment date</label><div class="date-input-wrap"><input type="date" id="rp-date"><button type="button" class="date-today-btn" onclick="setToday('rp-date')">Today</button></div></div>
+    <div class="section-label">Payment methods</div>
+    <div id="rp-splits" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
+    <button class="btn" style="font-size:12px;padding:5px 10px;margin-bottom:14px;" onclick="addSplit()"><i class="ti ti-plus"></i> Add another method</button>
+    <div style="background:var(--bg2);border-radius:var(--radius);padding:10px 14px;font-size:13px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="color:var(--text2);">Total being recorded:</span>
+      <strong id="rp-split-total" style="color:var(--green);">$0.00</strong>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('modal-pay')">Cancel</button>
+      <button class="btn success" onclick="savePayment()"><i class="ti ti-check"></i> Record payment</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="modal-expense">
+  <div class="modal">
+    <h2 id="exp-modal-title">Add expense</h2>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="field"><label>Date *</label><div class="date-input-wrap"><input type="date" id="ex-date"><button type="button" class="date-today-btn" onclick="setToday('ex-date')">Today</button></div></div>
+      <div class="field"><label>Description *</label><input id="ex-desc" placeholder="Office supplies, software subscription..."></div>
+      <div class="field"><label>Amount *</label><input type="number" id="ex-amount" placeholder="0.00" min="0" step="0.01"></div>
+      <div class="field"><label>Category</label>
+        <select id="ex-cat">
+          <option>Advertising & marketing</option><option>Bank fees</option><option>Contract labor</option>
+          <option>Equipment</option><option>Insurance</option><option>Meals & entertainment</option>
+          <option>Office supplies</option><option>Professional services</option><option>Rent & utilities</option>
+          <option>Software & subscriptions</option><option>Travel</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Vendor / payee</label><input id="ex-vendor" placeholder="Amazon, Stripe, etc."></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+        <input type="checkbox" id="ex-deductible" checked style="width:15px;height:15px;accent-color:var(--accent);">
+        <label for="ex-deductible" style="font-size:13px;cursor:pointer;">Tax deductible</label>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="ex-notes" placeholder="Optional notes..." style="min-height:48px;"></textarea></div>
+      <div style="border-top:0.5px solid var(--border);padding-top:12px;margin-top:4px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <input type="checkbox" id="ex-recurring" style="width:15px;height:15px;accent-color:var(--accent);" onchange="toggleRecurringFields()">
+          <label for="ex-recurring" style="font-size:13px;cursor:pointer;font-weight:600;">Recurring monthly expense</label>
+        </div>
+        <div id="ex-recurring-fields" style="display:none;flex-direction:column;gap:10px;">
+          <div style="font-size:12px;color:var(--text2);line-height:1.5;">This expense will be automatically logged on the same day each month.</div>
+          <div class="field"><label>End date (optional)</label><div class="date-input-wrap"><input type="date" id="ex-recur-end" placeholder="Leave blank to recur indefinitely"><button type="button" class="date-today-btn" onclick="setToday('ex-recur-end')">Today</button></div></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('modal-expense')">Cancel</button>
+      <button class="btn primary" onclick="saveExpense()">Save expense</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="modal-catalog">
+  <div class="modal">
+    <h2 id="cat-modal-title">Add catalog item</h2>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="field"><label>Name *</label><input id="cat-name" placeholder="Web design, Consulting hour..."></div>
+      <div class="field"><label>Description</label><input id="cat-desc" placeholder="Brief description shown on invoices"></div>
+      <div class="field"><label>Default price</label><input type="number" id="cat-price" placeholder="0.00" min="0" step="0.01"></div>
+      <div class="field"><label>Unit</label>
+        <select id="cat-unit"><option value="each">Each</option><option value="hour">Per hour</option><option value="day">Per day</option><option value="month">Per month</option><option value="project">Per project</option><option value="word">Per word</option><option value="ft">Per ft</option></select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('modal-catalog')">Cancel</button>
+      <button class="btn primary" onclick="saveCatalogItem()">Save item</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="modal-catalog-pick">
+  <div class="modal">
+    <h2>Add from catalog</h2>
+    <div id="catalog-pick-list" style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;"></div>
+    <div style="margin-top:16px;display:flex;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('modal-catalog-pick')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="modal-edit-pay">
+  <div class="modal">
+    <h2>Edit payment</h2>
+    <div id="ep-info" style="background:var(--bg2);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:13px;color:var(--text2);"></div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="field"><label>Payment date</label><div class="date-input-wrap"><input type="date" id="ep-date"><button type="button" class="date-today-btn" onclick="setToday('ep-date')">Today</button></div></div>
+      <div class="field"><label>Amount *</label><input type="number" id="ep-amount" placeholder="0.00" min="0" step="0.01"></div>
+      <div class="field"><label>Payment method</label>
+        <select id="ep-method">
+          <option>Bank transfer / ACH</option><option>Check</option><option>PayPal</option>
+          <option>Venmo</option><option>Zelle</option><option>Credit card</option><option>Cash</option><option>Apple Pay</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Reference / note</label><input id="ep-note" placeholder="Check #1234, transaction ID, etc."></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('modal-edit-pay')">Cancel</button>
+      <button class="btn success" onclick="saveEditPayment()"><i class="ti ti-check"></i> Save changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="modal-pay-from-history">
+  <div class="modal" style="width:500px;">
+    <h2>Record payment</h2>
+    <div class="field" style="margin-bottom:12px;">
+      <label>Invoice *</label>
+      <select id="ph-inv-select" onchange="onPhInvChange()" style="font-size:13px;padding:8px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;"></select>
+    </div>
+    <div id="ph-modal-info" style="font-size:13px;margin-bottom:12px;min-height:18px;"></div>
+    <div class="field" style="margin-bottom:14px;"><label>Payment date</label><div class="date-input-wrap"><input type="date" id="rph-date"><button type="button" class="date-today-btn" onclick="setToday('rph-date')">Today</button></div></div>
+    <div class="section-label">Payment methods</div>
+    <div id="rph-splits" style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px;"></div>
+    <button class="btn" style="font-size:12px;padding:5px 10px;margin-bottom:14px;" onclick="addPhSplit()"><i class="ti ti-plus"></i> Add another method</button>
+    <div style="background:var(--bg2);border-radius:var(--radius);padding:10px 14px;font-size:13px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="color:var(--text2);">Total being recorded:</span>
+      <strong id="rph-split-total" style="color:var(--green);">$0.00</strong>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">
+      <button class="btn" onclick="closeModal('modal-pay-from-history')">Cancel</button>
+      <button class="btn success" onclick="savePayFromHistory()"><i class="ti ti-check"></i> Record payment</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .main -->
+</div><!-- end .app -->
+
+<div class="toast" id="toast"><i class="ti ti-check" style="color:var(--green);"></i> <span id="tmsg"></span></div>
+
+<script>
+const AP_PAL=['#2C4A7C','#1a1a2e','#8B2252','#1D9E75','#D85A30','#5C3D99','#B8860B','#2E4A3E'];
+const HP_PAL=['#2C4A7C','#1a1a2e','#2E4A3E','#4a2020','#3d3520','#222222','#e8e0d0','#f0f0f0'];
+const EXP_CATS=['Advertising & marketing','Bank fees','Contract labor','Equipment','Insurance','Meals & entertainment','Office supplies','Professional services','Rent & utilities','Software & subscriptions','Travel','Other'];
+
+let S={
+  clients:[],documents:[],payments:[],expenses:[],catalog:[],
+  branding:{company:'',email:'',phone:'',website:'',address:'',logoDataUrl:'',paymentInfo:''},
+  appearance:{accent:'#2C4A7C',headerBg:'#2C4A7C',font:"Georgia,'Times New Roman',serif",showLogo:true,showAddr:true,footer:'',wmEnabled:false,wmText:'DRAFT',wmColor:'#cccccc',reviewEnabled:false,reviewLink:''},
+  lineItems:[],docCounter:1,editingDocId:null,editingExpId:null,editingCatId:null,editingClientId:null,editingPaymentId:null,
+  docsFilter:'all',arFilter:'all',rpDocId:null,plYear:new Date().getFullYear(),plMode:'year'
+};
+
+let charts={};
+
+/*PURE-SYNC-START*/
+// ---- Cloud sync core (pure logic, no DOM; unit-tested in test/sync.test.js) ----
+const CLOUD_TABLES=['clients','documents','payments','expenses','catalog'];
+function stableStringify(v){
+  if(v===undefined||typeof v==='function')return 'null';
+  if(v===null||typeof v!=='object')return JSON.stringify(v)===undefined?'null':JSON.stringify(v);
+  if(Array.isArray(v))return '['+v.map(stableStringify).join(',')+']';
+  return '{'+Object.keys(v).filter(k=>v[k]!==undefined&&typeof v[k]!=='function').sort().map(k=>JSON.stringify(k)+':'+stableStringify(v[k])).join(',')+'}';
+}
+function rowKey(rec){return rec&&typeof rec==='object'&&rec.id!==undefined&&rec.id!==null?String(rec.id):null;}
+function ensureIds(state){
+  let n=0;const base=Date.now();
+  CLOUD_TABLES.forEach(t=>{(state[t]||[]).forEach(r=>{if(r&&typeof r==='object'&&rowKey(r)===null){r.id=base+(n++);}});});
+  return n;
+}
+function settingsOf(state){return {branding:state.branding,appearance:state.appearance,docCounter:state.docCounter};}
+// Snapshot = {tables:{clients:{key:jsonString}}, settings:jsonString|null}
+function buildSnapshot(state){
+  const tables={};
+  CLOUD_TABLES.forEach(t=>{
+    const m={};
+    (state[t]||[]).forEach(r=>{const k=rowKey(r);if(k!==null)m[k]=stableStringify(r);});
+    tables[t]=m;
+  });
+  return {tables,settings:stableStringify(settingsOf(state))};
+}
+function diffSnapshots(prev,cur){
+  const ops={upserts:{},deletes:{},settings:null};
+  CLOUD_TABLES.forEach(t=>{
+    const p=(prev.tables&&prev.tables[t])||{},c=(cur.tables&&cur.tables[t])||{};
+    ops.upserts[t]=Object.keys(c).filter(k=>p[k]!==c[k]).map(k=>({key:k,str:c[k]}));
+    ops.deletes[t]=Object.keys(p).filter(k=>!(k in c));
+  });
+  if(cur.settings!==prev.settings)ops.settings=cur.settings;
+  return ops;
+}
+function isEmptyOps(o){
+  return o.settings===null&&CLOUD_TABLES.every(t=>!o.upserts[t].length&&!o.deletes[t].length);
+}
+function applyOpsToSnapshot(snap,ops){
+  const out={tables:{},settings:ops.settings!==null?ops.settings:snap.settings};
+  CLOUD_TABLES.forEach(t=>{
+    const m=Object.assign({},(snap.tables&&snap.tables[t])||{});
+    ops.deletes[t].forEach(k=>{delete m[k];});
+    ops.upserts[t].forEach(u=>{m[u.key]=u.str;});
+    out.tables[t]=m;
+  });
+  return out;
+}
+// Re-apply a set of local changes on top of freshly loaded cloud state.
+function applyOpsToState(state,ops){
+  CLOUD_TABLES.forEach(t=>{
+    let arr=state[t]||[];
+    const del=new Set(ops.deletes[t]);
+    arr=arr.filter(r=>!del.has(rowKey(r)));
+    ops.upserts[t].forEach(u=>{
+      const rec=JSON.parse(u.str),i=arr.findIndex(r=>rowKey(r)===u.key);
+      if(i>-1)arr[i]=rec;else arr.push(rec);
+    });
+    state[t]=arr;
+  });
+  if(ops.settings!==null){const s=JSON.parse(ops.settings);['branding','appearance','docCounter'].forEach(k=>{if(s[k]!==undefined)state[k]=s[k];});}
+  return state;
+}
+function hasData(o){return !!o&&(CLOUD_TABLES.some(t=>Array.isArray(o[t])&&o[t].length>0));}
+// Page through a table (PostgREST returns at most 1000 rows per request)
+async function fetchTableAll(sb,table){
+  const out=[];const size=1000;
+  for(let from=0;;from+=size){
+    const {data,error}=await sb.from(table).select('id,data').order('id',{ascending:true}).range(from,from+size-1);
+    if(error)throw error;
+    out.push(...data);
+    if(data.length<size)break;
+  }
+  return out;
+}
+async function fetchAllCloud(sb){
+  const rows={};
+  for(const t of CLOUD_TABLES)rows[t]=await fetchTableAll(sb,t);
+  const {data,error}=await sb.from('settings').select('data').limit(1);
+  if(error)throw error;
+  return {rows,settings:data&&data.length?data[0].data:null};
+}
+function stateFromCloud(f){
+  const st={};
+  CLOUD_TABLES.forEach(t=>{
+    st[t]=f.rows[t].map(r=>r.data).sort((a,b)=>{const x=Number(a&&a.id),y=Number(b&&b.id);return (isNaN(x)||isNaN(y))?0:x-y;});
+  });
+  if(f.settings){['branding','appearance','docCounter'].forEach(k=>{if(f.settings[k]!==undefined)st[k]=f.settings[k];});}
+  return st;
+}
+function chunk(a,n){const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;}
+async function pushOps(sb,uid,ops,nowIso){
+  for(const t of CLOUD_TABLES){
+    for(const part of chunk(ops.upserts[t],200)){
+      const rows=part.map(u=>({user_id:uid,id:u.key,data:JSON.parse(u.str),updated_at:nowIso}));
+      const {error}=await sb.from(t).upsert(rows,{onConflict:'user_id,id'});
+      if(error)throw error;
+    }
+    for(const part of chunk(ops.deletes[t],200)){
+      const {error}=await sb.from(t).delete().eq('user_id',uid).in('id',part);
+      if(error)throw error;
+    }
+  }
+  if(ops.settings!==null){
+    const {error}=await sb.from('settings').upsert({user_id:uid,data:JSON.parse(ops.settings),updated_at:nowIso},{onConflict:'user_id'});
+    if(error)throw error;
+  }
+}
+function isNetworkError(e){return !(e&&e.code);} // PostgREST/Auth errors carry a code; fetch failures do not
+// Debounced, serialized, retrying syncer. Injected deps keep it testable.
+function createSyncer(o){
+  const st={snap:o.snapshot,running:false,runPromise:null,timer:null,retryTimer:null,failures:0,pending:false,lastSaved:o.lastSaved||null,stopped:false};
+  const debounce=o.debounceMs===undefined?800:o.debounceMs;
+  const status=(s,e)=>{if(o.onStatus)o.onStatus(s,e);};
+  function clearTimers(){if(st.timer){o.clearTimeout(st.timer);st.timer=null;}if(st.retryTimer){o.clearTimeout(st.retryTimer);st.retryTimer=null;}}
+  function schedule(){
+    if(st.stopped)return;
+    st.pending=true;clearTimers();
+    status('saving');
+    st.timer=o.setTimeout(()=>{st.timer=null;run();},debounce);
+  }
+  function run(){
+    if(st.stopped)return Promise.resolve();
+    if(st.retryTimer){o.clearTimeout(st.retryTimer);st.retryTimer=null;}
+    if(st.running)return st.runPromise;
+    st.running=true;
+    st.runPromise=(async()=>{
+      try{
+        for(;;){
+          const ops=diffSnapshots(st.snap,buildSnapshot(o.getState()));
+          if(isEmptyOps(ops)){st.pending=false;status('saved');break;}
+          status('saving');
+          const nowIso=new Date().toISOString();
+          await o.push(ops,nowIso);
+          st.snap=applyOpsToSnapshot(st.snap,ops);
+          st.failures=0;st.lastSaved=nowIso;
+          if(o.onSynced)o.onSynced(st.snap,st.lastSaved);
+        }
+      }catch(e){
+        st.failures++;st.pending=true;
+        status(isNetworkError(e)?'offline':'error',e);
+        const d=Math.min(60000,3000*Math.pow(2,Math.min(st.failures,5)-1));
+        if(!st.stopped)st.retryTimer=o.setTimeout(()=>{st.retryTimer=null;run();},d);
+      }finally{st.running=false;}
+    })();
+    return st.runPromise;
+  }
+  function flush(){clearTimers();return run();}
+  function stop(){st.stopped=true;st.pending=false;clearTimers();}
+  return {st,schedule,flush,stop,get pending(){return st.pending;},get lastSaved(){return st.lastSaved;},get snap(){return st.snap;}};
+}
+/*PURE-SYNC-END*/
+
+// ===== CLOUD (Supabase) =====
+// The publishable key is designed to be public; Row Level Security + login protect the data.
+const SUPABASE_URL='https://uyvgqyvwslkblsguczjn.supabase.co';
+const SUPABASE_KEY='sb_publishable_T333KvhxatQZuv5N1GEJnw_zT7lDnSY';
+const LS_STATE='c3collective_state',LS_UID='c3collective_cache_uid',LS_SNAP='c3collective_synced',LS_LEGACY='c3collective_legacy_backup';
+let sb=null,cloudUser=null,syncer=null,appBooted=false,recoveryMode=false,offlineEdits=false,cloudLoadPending=false;
+
+const escH=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function defaultBranding(){return {company:'',email:'',phone:'',website:'',address:'',logoDataUrl:'',paymentInfo:''};}
+function defaultAppearance(){return {accent:'#2C4A7C',headerBg:'#2C4A7C',font:"Georgia,'Times New Roman',serif",showLogo:true,showAddr:true,footer:'',wmEnabled:false,wmText:'DRAFT',wmColor:'#cccccc',reviewEnabled:false,reviewLink:''};}
+function applyLoaded(p){
+  // Same merge as the original load(): shape p into S
+  Object.assign(S,p);
+  S.lineItems=[];S.editingDocId=null;S.editingExpId=null;S.editingCatId=null;
+  if(!S.clients)S.clients=[];
+  if(!S.documents)S.documents=[];
+  if(!S.payments)S.payments=[];
+  if(!S.expenses)S.expenses=[];
+  if(!S.catalog)S.catalog=[];
+  if(!S.appearance)S.appearance=defaultAppearance();
+  S.branding=Object.assign(defaultBranding(),S.branding||{});
+  if(!S.docCounter)S.docCounter=1;
+}
+function stateForStorage(){return {clients:S.clients,documents:S.documents,payments:S.payments,expenses:S.expenses,catalog:S.catalog,branding:S.branding,appearance:S.appearance,docCounter:S.docCounter};}
+function persist(){
+  try{localStorage.setItem(LS_STATE,JSON.stringify(stateForStorage()));}catch(e){}
+  if(syncer)syncer.schedule();
+  else if(cloudUser){offlineEdits=true;setCloudStatus('offline');}
+}
+function readLocalCache(){
+  try{const d=localStorage.getItem(LS_STATE);return d?JSON.parse(d):null;}catch(e){return null;}
+}
+function readSnapRec(){try{const r=JSON.parse(localStorage.getItem(LS_SNAP)||'null');return r&&r.snap?r:null;}catch(e){return null;}}
+function writeSnapRec(uid,snap,lastSaved){try{localStorage.setItem(LS_SNAP,JSON.stringify({uid,snap,lastSaved}));localStorage.setItem(LS_UID,uid);}catch(e){}}
+
+// --- status indicator ---
+const CS_TEXT={saved:'Saved to cloud',saving:'Saving…',offline:'Offline – will retry',error:'Save failed – retrying',connecting:'Connecting…'};
+let csState='connecting',csErr=null;
+function setCloudStatus(s,err){
+  csState=s;csErr=err||null;
+  const el=$('cloud-status');if(!el)return;
+  el.className='cloud-status cs-'+s;
+  let t=CS_TEXT[s]||s;
+  if(cloudLoadPending)t='Offline – changes kept on this device (click to retry)';
+  $('cs-text').textContent=t;
+  el.title=err?String(err.message||err):'';
+  const ls=$('last-sync');if(ls)ls.textContent=lastSyncText();
+}
+function lastSyncText(){
+  const t=syncer&&syncer.lastSaved;
+  return t?new Date(t).toLocaleString():'not yet this session';
+}
+function cloudStatusClick(){
+  if(cloudLoadPending){location.reload();return;}
+  if(syncer)syncer.flush();
+}
+
+// --- auth screen ---
+function authShow(which,msg,isErr){
+  $('auth-screen').classList.remove('hidden');
+  ['auth-loading','auth-form','auth-recovery','auth-migrate','auth-fail'].forEach(id=>$(id).classList.add('hidden'));
+  if(which)$(which).classList.remove('hidden');
+  const m=$('auth-msg');m.textContent=msg||'';m.className='auth-msg'+(isErr?' err':'');
+}
+function authHide(){$('auth-screen').classList.add('hidden');}
+async function doLogin(ev){
+  ev.preventDefault();
+  const email=$('auth-email').value.trim(),password=$('auth-pass').value;
+  if(!email||!password){authShow('auth-form','Enter your email and password.',true);return false;}
+  const btn=$('auth-btn');btn.disabled=true;authShow('auth-form','Signing in…');
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({email,password});
+    if(error){authShow('auth-form',error.message,true);return false;}
+    $('auth-pass').value='';
+    await startCloud(data.user);
+  }catch(e){authShow('auth-form','Could not reach the server. Check your internet connection.',true);}
+  finally{btn.disabled=false;}
+  return false;
+}
+async function doReset(){
+  const email=$('auth-email').value.trim();
+  if(!email){authShow('auth-form','Type your email above first, then click "Forgot password?".',true);return;}
+  const opts=/^https?:$/.test(location.protocol)?{redirectTo:location.origin+location.pathname}:{};
+  try{
+    const {error}=await sb.auth.resetPasswordForEmail(email,opts);
+    if(error)authShow('auth-form',error.message,true);
+    else authShow('auth-form','If that email has an account, a reset link is on its way.');
+  }catch(e){authShow('auth-form','Could not reach the server. Check your internet connection.',true);}
+}
+async function doNewPassword(ev){
+  ev.preventDefault();
+  const p1=$('auth-newpass').value,p2=$('auth-newpass2').value;
+  if(p1.length<8){authShow('auth-recovery','Use at least 8 characters.',true);return false;}
+  if(p1!==p2){authShow('auth-recovery','The two passwords do not match.',true);return false;}
+  const {data,error}=await sb.auth.updateUser({password:p1});
+  if(error){authShow('auth-recovery',error.message,true);return false;}
+  recoveryMode=false;
+  try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+  await startCloud(data.user);
+  return false;
+}
+async function signOut(){
+  if(syncer){
+    if(syncer.pending){setCloudStatus('saving');await syncer.flush();}
+    if(syncer.pending&&!confirm('Some changes have not reached the cloud yet. Sign out anyway and discard them on this device?'))return;
+    syncer.stop();
+  }
+  offlineEdits=false;
+  try{localStorage.removeItem(LS_STATE);localStorage.removeItem(LS_UID);localStorage.removeItem(LS_SNAP);}catch(e){}
+  try{await sb.auth.signOut();}catch(e){}
+  location.reload();
+}
+window.addEventListener('beforeunload',e=>{
+  const pend=(syncer&&syncer.pending)||offlineEdits;
+  if(pend){e.preventDefault();e.returnValue='Some changes have not been saved to the cloud yet.';return e.returnValue;}
+});
+window.addEventListener('online',()=>{if(syncer)syncer.flush();});
+
+// --- start-up ---
+async function initCloud(){
+  if(!window.supabase||!window.supabase.createClient){
+    authShow('auth-fail','Could not load the cloud library. Check your internet connection and reload.',true);return;
+  }
+  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  if(/type=recovery/.test(location.hash))recoveryMode=true;
+  sb.auth.onAuthStateChange((ev)=>{
+    if(ev==='PASSWORD_RECOVERY'){recoveryMode=true;authShow('auth-recovery','Choose a new password.');}
+    else if(ev==='SIGNED_OUT'&&appBooted&&!syncer)location.reload();
+  });
+  let session=null;
+  try{const r=await sb.auth.getSession();session=r.data&&r.data.session;}catch(e){}
+  if(recoveryMode){authShow('auth-recovery','Choose a new password.');return;}
+  if(session)await startCloud(session.user);else authShow('auth-form','');
+}
+function askMigrate(localObj){
+  return new Promise(res=>{
+    const n=t=>(localObj[t]||[]).length;
+    $('mig-summary').textContent=`${n('clients')} clients, ${n('documents')} documents, ${n('payments')} payments, ${n('expenses')} expenses, ${n('catalog')} catalog items`;
+    authShow('auth-migrate');
+    $('mig-yes').onclick=()=>res(true);
+    $('mig-no').onclick=()=>res(false);
+  });
+}
+async function startCloud(user){
+  cloudUser=user;authShow('auth-loading','');
+  setCloudStatus('connecting');
+  $('cs-user').textContent=user.email||'';
+  let fetched=null;
+  try{fetched=await fetchAllCloud(sb);}catch(e){console.warn('cloud load failed',e);fetched=null;}
+  const snapRec=readSnapRec(),localObj=readLocalCache();
+  const mine=!!(localObj&&snapRec&&snapRec.uid===user.id&&localStorage.getItem(LS_UID)===user.id);
+  if(!fetched){
+    if(mine&&localObj){ // offline: run from this device's saved copy; reload later to merge
+      applyLoaded(localObj);cloudLoadPending=true;authHide();bootApp();setCloudStatus('offline');
+      window.addEventListener('online',()=>location.reload(),{once:true});
+      return;
+    }
+    authShow('auth-fail','Could not load your data from the cloud. Check your connection and try again.',true);return;
+  }
+  const cloudEmpty=CLOUD_TABLES.every(t=>!fetched.rows[t].length)&&!fetched.settings;
+  const cloudState=stateFromCloud(fetched);
+  let snapshotBase=null,mergedFromDevice=false,loaded=cloudState;
+  const keepLegacy=()=>{try{if(localObj&&hasData(localObj)&&!localStorage.getItem(LS_LEGACY))localStorage.setItem(LS_LEGACY,JSON.stringify(localObj));}catch(e){}};
+  if(mine){
+    // Device may hold edits that never reached the cloud: replay them on top of the cloud copy
+    const ops=diffSnapshots(snapRec.snap,buildSnapshot(localObj||{}));
+    loaded=applyOpsToState(cloudState,ops);mergedFromDevice=!isEmptyOps(ops);
+  }else if(cloudEmpty&&hasData(localObj)){
+    keepLegacy();
+    const yes=await askMigrate(localObj);
+    if(yes)loaded=localObj;
+  }else{
+    keepLegacy();
+  }
+  // Snapshot of what the cloud currently holds (the base for diffing)
+  const baseState=Object.assign({branding:defaultBranding(),appearance:defaultAppearance(),docCounter:1},stateFromCloud(fetched));
+  baseState.branding=Object.assign(defaultBranding(),baseState.branding||{});
+  snapshotBase=buildSnapshot(baseState);
+  if(!fetched.settings)snapshotBase.settings=null;
+  applyLoaded(loaded);
+  ensureIds(S);
+  writeSnapRec(user.id,snapshotBase,new Date().toISOString());
+  try{localStorage.setItem(LS_STATE,JSON.stringify(stateForStorage()));}catch(e){}
+  syncer=createSyncer({
+    snapshot:snapshotBase,lastSaved:new Date().toISOString(),
+    getState:()=>S,
+    push:(ops,nowIso)=>pushOps(sb,user.id,ops,nowIso),
+    onStatus:(s,e)=>setCloudStatus(s,e),
+    onSynced:(snap,t)=>writeSnapRec(user.id,snap,t),
+    setTimeout:(f,ms)=>setTimeout(f,ms),clearTimeout:t=>clearTimeout(t)
+  });
+  authHide();
+  bootApp();
+  setCloudStatus('saved');
+  syncer.flush();
+  if(mergedFromDevice)toast('Recovered changes made while offline.');
+}
+
+const $=id=>document.getElementById(id);
+const fm=n=>'$'+parseFloat(n||0).toFixed(2);
+const ini=n=>(n||'?').split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2)||'?';
+const tod=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+function setToday(id){
+  const el=$(id);if(!el)return;
+  el.value=tod();
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+  el.dispatchEvent(new Event('change',{bubbles:true}));
+}
+function toast(m){$('tmsg').textContent=m;const e=$('toast');e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2500);}
+function openModal(id){$(id).classList.remove('hidden');}
+function closeModal(id){$(id).classList.add('hidden');}
+
+// Payment helpers
+const docPaid=id=>S.payments.filter(p=>p.docId===id).reduce((s,p)=>s+(p.amount||0),0);
+const docBal=d=>Math.max(0,(d.total||0)-docPaid(d.id));
+const isOD=d=>d.due&&d.status!=='paid'&&new Date(d.due)<new Date(tod());
+const dpd=d=>!d.due?0:Math.max(0,Math.floor((new Date(tod())-new Date(d.due))/86400000));
+function arSt(d){const b=docBal(d);if(b<=0)return'paid';if(isOD(d))return'overdue';if(docPaid(d.id)>0)return'partial';return'current';}
+
+// NAV
+function go(name){
+  ['dashboard','pl','ar','payments','clients','documents','create','expenses','recurring','catalog','branding','appearance','data'].forEach(p=>{
+    $('page-'+p).classList.add('hidden');
+    $('nav-'+p).classList.remove('active');
+  });
+  $('page-'+name).classList.remove('hidden');
+  $('nav-'+name).classList.add('active');
+  if(name==='dashboard')renderDash();
+  if(name==='pl')renderPL();
+  if(name==='ar')renderAR();
+  if(name==='payments')renderPayments();
+  if(name==='documents')renderDocs();
+  if(name==='clients')renderClients();
+  if(name==='create'&&!S.editingDocId)initCreate(null);
+  if(name==='expenses')renderExpenses();
+  if(name==='recurring')renderRecurring();
+  if(name==='catalog')renderCatalog();
+  if(name==='branding')loadBranding();
+  if(name==='appearance')loadAppearance();
+  if(name==='data')renderDataPage();
+}
+
+// CHARTS
+function destroyChart(key){if(charts[key]){charts[key].destroy();delete charts[key];}}
+function mkChart(id,type,data,opts={}){
+  destroyChart(id);
+  const ctx=$(id);if(!ctx)return;
+  charts[id]=new Chart(ctx,{type,data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}}},scales:type==='bar'||type==='line'?{y:{beginAtZero:true,ticks:{callback:v=>'$'+v.toLocaleString(),font:{size:11}}},x:{ticks:{font:{size:11}}}}:undefined,...opts}});
+}
+
+// DASHBOARD
+function renderDash(){
+  const inv=S.documents.filter(d=>d.type==='invoice');
+  $('m-invoiced').textContent=fm(inv.reduce((s,d)=>s+(d.total||0),0));
+  $('m-collected').textContent=fm(S.payments.reduce((s,p)=>s+(p.amount||0),0));
+  $('m-outstanding').textContent=fm(inv.filter(d=>docBal(d)>0).reduce((s,d)=>s+docBal(d),0));
+  $('m-expenses').textContent=fm(S.expenses.reduce((s,e)=>s+(e.amount||0),0));
+
+  // Revenue vs Expenses chart (last 6 months)
+  const months=[];const rev=[];const exp=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date();d.setMonth(d.getMonth()-i);
+    const ym=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const ml=d.toLocaleString('default',{month:'short'});
+    months.push(ml);
+    rev.push(S.payments.filter(p=>p.date&&p.date.startsWith(ym)).reduce((s,p)=>s+(p.amount||0),0));
+    exp.push(S.expenses.filter(e=>e.date&&e.date.startsWith(ym)).reduce((s,e)=>s+(e.amount||0),0));
+  }
+  setTimeout(()=>{
+    mkChart('chart-rev-exp','bar',{labels:months,datasets:[{label:'Revenue',data:rev,backgroundColor:'rgba(15,110,86,0.7)',borderRadius:4},{label:'Expenses',data:exp,backgroundColor:'rgba(163,45,45,0.7)',borderRadius:4}]});
+    // Status pie
+    const statuses={paid:0,sent:0,draft:0,overdue:0};
+    inv.forEach(d=>{const s=arSt(d);statuses[s]=(statuses[s]||0)+(d.total||0);});
+    mkChart('chart-status','doughnut',{
+      labels:['Paid','Sent','Draft','Overdue'],
+      datasets:[{data:[statuses.paid,statuses.sent,statuses.draft,statuses.overdue],backgroundColor:['#0F6E56','#185FA5','#999','#A32D2D'],borderWidth:0}]
+    },{plugins:{legend:{position:'bottom'}}});
+  },100);
+
+  const el=$('recent-docs');
+  const r=[...S.documents].slice(-5).reverse();
+  el.innerHTML=r.length?r.map(docRow).join(''):'<div class="empty-state">No documents yet — create your first one!</div>';
+}
+
+// PROFIT & LOSS
+function setPLMode(mode, yr){
+  S.plMode = mode;
+  if(yr) S.plYear = yr;
+  // Toggle button styles
+  const allBtn=$('pl-btn-all');
+  if(allBtn){
+    allBtn.style.background = mode==='all'?'var(--accent)':'';
+    allBtn.style.color = mode==='all'?'#fff':'';
+    allBtn.style.borderColor = mode==='all'?'transparent':'';
+  }
+  renderPL();
+}
+
+function renderPL(){
+  if(!S.plMode) S.plMode='year';
+  const nowYr=new Date().getFullYear();
+  const years=[...new Set([...[...Array(3)].map((_,i)=>nowYr-i),...S.documents.map(d=>d.date?+d.date.slice(0,4):nowYr),...S.expenses.map(e=>e.date?+e.date.slice(0,4):nowYr)])].sort((a,b)=>b-a);
+  const sel=$('pl-year');
+  sel.innerHTML=years.map(y=>`<option value="${y}" ${y===S.plYear?'selected':''}>${y}</option>`).join('');
+
+  // Style the All time button
+  const allBtn=$('pl-btn-all');
+  if(allBtn){
+    allBtn.style.background=S.plMode==='all'?'var(--accent)':'';
+    allBtn.style.color=S.plMode==='all'?'#fff':'';
+    allBtn.style.borderColor=S.plMode==='all'?'transparent':'';
+  }
+
+  const isAll = S.plMode==='all';
+  const yStr = String(S.plYear);
+  const mons=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  if(isAll){
+    // ALL TIME MODE — group by year
+    const allYears=[...new Set([...S.payments.map(p=>p.date?p.date.slice(0,4):'').filter(Boolean),...S.expenses.map(e=>e.date?e.date.slice(0,4):'').filter(Boolean)])].sort();
+    const incByYear={}, expByYear={};
+    S.payments.forEach(p=>{if(!p.date)return;const y=p.date.slice(0,4);incByYear[y]=(incByYear[y]||0)+(p.amount||0);});
+    S.expenses.forEach(e=>{if(!e.date)return;const y=e.date.slice(0,4);expByYear[y]=(expByYear[y]||0)+(e.amount||0);});
+    const totalInc=Object.values(incByYear).reduce((a,b)=>a+b,0);
+    const totalExp=Object.values(expByYear).reduce((a,b)=>a+b,0);
+    const net=totalInc-totalExp;
+    $('pl-income').textContent=fm(totalInc);
+    $('pl-exp').textContent=fm(totalExp);
+    $('pl-net').textContent=fm(net);
+    $('pl-net').style.color=net>=0?'var(--green)':'var(--red)';
+    // Income rows by year
+    $('pl-income-rows').innerHTML=allYears.map(y=>incByYear[y]>0?`<div class="pl-row income"><span>${y} — Revenue collected</span><span>${fm(incByYear[y])}</span></div>`:'').join('')||'<div class="pl-row"><span style="color:var(--text2);">No income recorded</span></div>';
+    // Expense rows by category across all time
+    const byCat={};
+    S.expenses.forEach(e=>{const c=e.category||'Other';byCat[c]=(byCat[c]||0)+(e.amount||0);});
+    $('pl-expense-rows').innerHTML=Object.entries(byCat).map(([c,v])=>`<div class="pl-row expense"><span>${c}</span><span>${fm(v)}</span></div>`).join('')||'<div class="pl-row"><span style="color:var(--text2);">No expenses recorded</span></div>';
+    $('pl-net-row').textContent=fm(net);
+    $('pl-net-row').style.color=net>=0?'var(--green)':'var(--red)';
+    // Charts — revenue vs expenses by year
+    const chartLabels=allYears.length?allYears:['No data'];
+    const revData=chartLabels.map(y=>incByYear[y]||0);
+    const expData=chartLabels.map(y=>expByYear[y]||0);
+    const catLabels=Object.keys(byCat),catVals=Object.values(byCat);
+    const catColors=['#2C4A7C','#D85A30','#1D9E75','#8B2252','#BA7517','#5C3D99','#185FA5','#A32D2D','#639922','#B8860B','#2E4A3E','#999'];
+    setTimeout(()=>{
+      mkChart('chart-pl-monthly','bar',{labels:chartLabels,datasets:[
+        {label:'Revenue',data:revData,backgroundColor:'rgba(15,110,86,0.7)',borderRadius:4},
+        {label:'Expenses',data:expData,backgroundColor:'rgba(163,45,45,0.7)',borderRadius:4}
+      ]});
+      mkChart('chart-exp-cat','doughnut',{labels:catLabels.length?catLabels:['No data'],datasets:[{data:catVals.length?catVals:[1],backgroundColor:catLabels.length?catColors.slice(0,catLabels.length):['#eee'],borderWidth:0}]});
+    },100);
+
+  } else {
+    // YEAR MODE — group by month
+    const incomeByMonth=Array(12).fill(0);
+    const expByMonth=Array(12).fill(0);
+    S.payments.forEach(p=>{if(p.date&&p.date.startsWith(yStr)){const m=+p.date.slice(5,7)-1;incomeByMonth[m]+=(p.amount||0);}});
+    S.expenses.forEach(e=>{if(e.date&&e.date.startsWith(yStr)){const m=+e.date.slice(5,7)-1;expByMonth[m]+=(e.amount||0);}});
+    const totalInc=incomeByMonth.reduce((a,b)=>a+b,0);
+    const totalExp=expByMonth.reduce((a,b)=>a+b,0);
+    const net=totalInc-totalExp;
+    $('pl-income').textContent=fm(totalInc);
+    $('pl-exp').textContent=fm(totalExp);
+    $('pl-net').textContent=fm(net);
+    $('pl-net').style.color=net>=0?'var(--green)':'var(--red)';
+    $('pl-income-rows').innerHTML=mons.map((m,i)=>incomeByMonth[i]>0?`<div class="pl-row income"><span>${m} — Revenue collected</span><span>${fm(incomeByMonth[i])}</span></div>`:'').join('')||'<div class="pl-row"><span style="color:var(--text2);">No income recorded</span></div>';
+    const byCat={};
+    S.expenses.filter(e=>e.date&&e.date.startsWith(yStr)).forEach(e=>{const c=e.category||'Other';byCat[c]=(byCat[c]||0)+(e.amount||0);});
+    $('pl-expense-rows').innerHTML=Object.entries(byCat).map(([c,v])=>`<div class="pl-row expense"><span>${c}</span><span>${fm(v)}</span></div>`).join('')||'<div class="pl-row"><span style="color:var(--text2);">No expenses recorded</span></div>';
+    $('pl-net-row').textContent=fm(net);
+    $('pl-net-row').style.color=net>=0?'var(--green)':'var(--red)';
+    const catLabels=Object.keys(byCat),catVals=Object.values(byCat);
+    const catColors=['#2C4A7C','#D85A30','#1D9E75','#8B2252','#BA7517','#5C3D99','#185FA5','#A32D2D','#639922','#B8860B','#2E4A3E','#999'];
+    setTimeout(()=>{
+      mkChart('chart-pl-monthly','line',{labels:mons,datasets:[
+        {label:'Revenue',data:incomeByMonth,borderColor:'#0F6E56',backgroundColor:'rgba(15,110,86,0.1)',tension:0.3,fill:true},
+        {label:'Expenses',data:expByMonth,borderColor:'#A32D2D',backgroundColor:'rgba(163,45,45,0.1)',tension:0.3,fill:true}
+      ]});
+      mkChart('chart-exp-cat','doughnut',{labels:catLabels.length?catLabels:['No data'],datasets:[{data:catVals.length?catVals:[1],backgroundColor:catLabels.length?catColors.slice(0,catLabels.length):['#eee'],borderWidth:0}]});
+    },100);
+  }
+}
+
+function exportPLcsv(){
+  const isAll=S.plMode==='all';
+  let rows,csv,filename;
+  if(isAll){
+    const allYears=[...new Set([...S.payments.map(p=>p.date?p.date.slice(0,4):'').filter(Boolean),...S.expenses.map(e=>e.date?e.date.slice(0,4):'').filter(Boolean)])].sort();
+    rows=[['Year','Revenue','Expenses','Net']];
+    allYears.forEach(y=>{
+      const rev=S.payments.filter(p=>p.date&&p.date.startsWith(y)).reduce((s,p)=>s+(p.amount||0),0);
+      const exp=S.expenses.filter(e=>e.date&&e.date.startsWith(y)).reduce((s,e)=>s+(e.amount||0),0);
+      rows.push([y,rev.toFixed(2),exp.toFixed(2),(rev-exp).toFixed(2)]);
+    });
+    filename='C3Collective_PL_AllTime.csv';
+  } else {
+    const yr=S.plYear,yStr=String(yr);
+    const mons=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    rows=[['Month','Revenue','Expenses','Net']];
+    for(let i=0;i<12;i++){
+      const rev=S.payments.filter(p=>p.date&&p.date.startsWith(yStr)&&+p.date.slice(5,7)-1===i).reduce((s,p)=>s+(p.amount||0),0);
+      const exp=S.expenses.filter(e=>e.date&&e.date.startsWith(yStr)&&+e.date.slice(5,7)-1===i).reduce((s,e)=>s+(e.amount||0),0);
+      rows.push([mons[i],rev.toFixed(2),exp.toFixed(2),(rev-exp).toFixed(2)]);
+    }
+    filename=`C3Collective_PL_${yr}.csv`;
+  }
+  csv=rows.map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=filename;a.click();
+  toast('P&L exported!');
+}
+
+// AR
+function setArF(f){S.arFilter=f;renderAR();}
+function renderAR(){
+  const inv=S.documents.filter(d=>d.type==='invoice');
+  const bk={c:0,d30:0,d60:0,d90:0};
+  inv.forEach(d=>{const b=docBal(d);if(b<=0)return;const p=dpd(d);if(p===0)bk.c+=b;else if(p<=30)bk.d30+=b;else if(p<=60)bk.d60+=b;else bk.d90+=b;});
+  $('aging-boxes').innerHTML=[{l:'Current',v:bk.c,s:''},{l:'1–30 days',v:bk.d30,s:'color:#BA7517;'},{l:'31–60 days',v:bk.d60,s:'color:#D85A30;'},{l:'61+ days',v:bk.d90,s:'color:var(--red);'}]
+    .map(b=>`<div class="aging-box"><div class="aging-label">${b.l} past due</div><div class="aging-val" style="${b.s}">${fm(b.v)}</div></div>`).join('');
+  let rows=inv.filter(d=>docBal(d)>0);
+  if(S.arFilter==='overdue')rows=rows.filter(d=>isOD(d));
+  else if(S.arFilter==='current')rows=rows.filter(d=>!isOD(d));
+  const tb=$('ar-tbody'),em=$('ar-empty');
+  if(!rows.length){tb.innerHTML='';em.classList.remove('hidden');return;}
+  em.classList.add('hidden');
+  const bm={paid:'badge paid',overdue:'badge overdue',partial:'badge partial',current:'badge sent'};
+  const bl={paid:'Paid',overdue:'Overdue',partial:'Partial',current:'Current'};
+  tb.innerHTML=rows.map(d=>{
+    const cl=S.clients.find(c=>c.id===d.clientId);const st=arSt(d);
+    return`<tr><td><strong>${d.number}</strong></td><td>${cl?cl.name:'—'}</td><td style="color:var(--text2);">${d.date||'—'}</td>
+    <td style="color:${isOD(d)?'var(--red)':'var(--text2)'};">${d.due||'—'}</td>
+    <td>${fm(d.total)}</td><td style="color:var(--green);">${fm(docPaid(d.id))}</td><td><strong>${fm(docBal(d))}</strong></td>
+    <td><span class="${bm[st]||'badge draft'}">${bl[st]||st}</span></td>
+    <td><button class="btn success" style="font-size:12px;padding:5px 10px;" onclick="openPay(${d.id})"><i class="ti ti-plus"></i> Pay</button></td></tr>`;
+  }).join('');
+}
+
+// PAYMENTS — split payment support
+let rpSplits=[];
+function splitMethodOptions(selected){
+  const opts=['Bank transfer / ACH','Check','PayPal','Venmo','Zelle','Credit card','Cash','Apple Pay','Other'];
+  return opts.map(o=>`<option ${o===selected?'selected':''}>${o}</option>`).join('');
+}
+function renderSplits(){
+  $('rp-splits').innerHTML=rpSplits.map((s,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center;">
+      <select onchange="rpSplits[${i}].method=this.value" style="font-size:13px;padding:7px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">${splitMethodOptions(s.method)}</select>
+      <input type="number" value="${s.amount||''}" placeholder="Amount" min="0" step="0.01" oninput="rpSplits[${i}].amount=parseFloat(this.value)||0;updateSplitTotal();" style="font-size:13px;padding:7px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">
+      <input value="${s.note||''}" placeholder="Ref / note" oninput="rpSplits[${i}].note=this.value;" style="font-size:13px;padding:7px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;grid-column:1/3;margin-top:-4px;">
+      ${rpSplits.length>1?`<button class="del" onclick="remSplit(${i})" style="grid-row:1;grid-column:4;"><i class="ti ti-trash" style="font-size:14px;"></i></button>`:'<div></div>'}
+    </div>`).join('');
+  updateSplitTotal();
+}
+function addSplit(){rpSplits.push({method:'Cash',amount:0,note:''});renderSplits();}
+function remSplit(i){rpSplits.splice(i,1);renderSplits();}
+function updateSplitTotal(){
+  const tot=rpSplits.reduce((s,x)=>s+(x.amount||0),0);
+  $('rp-split-total').textContent=fm(tot);
+}
+function openPay(id){
+  const d=S.documents.find(x=>x.id===id);if(!d)return;
+  const cl=S.clients.find(c=>c.id===d.clientId);
+  S.rpDocId=id;
+  const bal=docBal(d);
+  $('rp-info').innerHTML=`<strong>${d.number}</strong> — ${cl?cl.name:'No client'}<br><span style="color:var(--text2);">Balance due: </span><strong style="color:var(--green);">${fm(bal)}</strong>`;
+  $('rp-date').value=tod();
+  rpSplits=[{method:'Cash',amount:bal,note:''}];
+  renderSplits();
+  openModal('modal-pay');
+}
+function savePayment(){
+  const date=$('rp-date').value;
+  const valid=rpSplits.filter(s=>s.amount>0);
+  if(!valid.length){alert('Enter at least one payment amount.');return;}
+  const d=S.documents.find(x=>x.id===S.rpDocId);
+  const now=Date.now();
+  valid.forEach((s,i)=>{
+    S.payments.push({id:now+i,docId:S.rpDocId,docNumber:d?d.number:'',clientId:d?d.clientId:null,date,amount:s.amount,method:s.method,note:s.note||''});
+  });
+  if(d){const tot=S.payments.filter(x=>x.docId===d.id).reduce((s,x)=>s+(x.amount||0),0);if(tot>=(d.total||0)){const i=S.documents.findIndex(x=>x.id===d.id);if(i>-1)S.documents[i].status='paid';}}
+  const totalAmt=valid.reduce((s,x)=>s+(x.amount||0),0);
+  persist();closeModal('modal-pay');
+  toast(valid.length>1?`Split payment of ${fm(totalAmt)} recorded (${valid.length} methods)!`:`Payment of ${fm(totalAmt)} recorded!`);
+  renderAR();renderDash();
+}
+function renderPayments(){
+  const all=[...S.payments].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const tot=all.reduce((s,p)=>s+(p.amount||0),0);
+  const now=new Date();
+  const mon=all.filter(p=>{const d=new Date(p.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).reduce((s,p)=>s+(p.amount||0),0);
+  $('ph-total').textContent=fm(tot);$('ph-count').textContent=`${all.length} payment${all.length!==1?'s':''}`;
+  $('ph-month').textContent=fm(mon);$('ph-avg').textContent=fm(all.length?tot/all.length:0);
+  const tb=$('ph-tbody'),em=$('ph-empty');
+  if(!all.length){tb.innerHTML='';em.classList.remove('hidden');return;}
+  em.classList.add('hidden');
+  tb.innerHTML=all.map(p=>{const cl=S.clients.find(c=>c.id===p.clientId);
+    return`<tr><td style="color:var(--text2);">${p.date||'—'}</td><td><strong>${p.docNumber||'—'}</strong></td><td>${cl?cl.name:'—'}</td>
+    <td><span class="badge sent">${p.method||'—'}</span></td><td style="color:var(--text2);font-size:12px;">${p.note||''}</td>
+    <td style="text-align:right;font-weight:700;color:var(--green);">${fm(p.amount)}</td>
+    <td style="white-space:nowrap;">
+      <button class="del" onclick="editPayment(${p.id})" title="Edit"><i class="ti ti-pencil" style="font-size:14px;"></i></button>
+      <button class="del" onclick="delPayment(${p.id})" title="Delete"><i class="ti ti-trash" style="font-size:14px;"></i></button>
+    </td></tr>`;
+  }).join('');
+}
+function delPayment(id){
+  if(!confirm('Delete this payment?'))return;
+  S.payments=S.payments.filter(p=>p.id!==id);persist();renderPayments();renderDash();toast('Payment deleted.');
+}
+function openPayFromHistory(){
+  // Populate invoice selector with all invoices
+  const invoices=S.documents.filter(d=>d.type==='invoice');
+  if(!invoices.length){alert('No invoices found. Create an invoice first.');return;}
+  const sel=$('ph-inv-select');
+  sel.innerHTML='<option value="">— select invoice —</option>'+invoices.map(d=>{
+    const cl=S.clients.find(c=>c.id===d.clientId);
+    const bal=docBal(d);
+    return`<option value="${d.id}">${d.number}${cl?' — '+cl.name:''} (Balance: ${fm(bal)})</option>`;
+  }).join('');
+  sel.value='';
+  $('ph-modal-info').innerHTML='';
+  $('rph-date').value=tod();
+  phSplits=[{method:'Cash',amount:0,note:''}];
+  renderPhSplits();
+  openModal('modal-pay-from-history');
+}
+function onPhInvChange(){
+  const id=parseInt($('ph-inv-select').value);
+  if(!id){$('ph-modal-info').innerHTML='';return;}
+  const d=S.documents.find(x=>x.id===id);
+  const cl=S.clients.find(c=>c.id===d.clientId);
+  const bal=docBal(d);
+  $('ph-modal-info').innerHTML=`<span style="color:var(--text2);">Balance due: </span><strong style="color:var(--green);">${fm(bal)}</strong>`;
+  phSplits=[{method:'Cash',amount:bal,note:''}];
+  renderPhSplits();
+}
+let phSplits=[{method:'Cash',amount:0,note:''}];
+function renderPhSplits(){
+  $('rph-splits').innerHTML=phSplits.map((s,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:start;margin-bottom:4px;">
+      <select onchange="phSplits[${i}].method=this.value" style="font-size:13px;padding:7px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">${splitMethodOptions(s.method)}</select>
+      <input type="number" value="${s.amount||''}" placeholder="Amount" min="0" step="0.01" oninput="phSplits[${i}].amount=parseFloat(this.value)||0;updatePhSplitTotal();" style="font-size:13px;padding:7px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">
+      ${phSplits.length>1?`<button class="del" onclick="remPhSplit(${i})"><i class="ti ti-trash" style="font-size:14px;"></i></button>`:'<div></div>'}
+      <input value="${s.note||''}" placeholder="Ref / note (optional)" oninput="phSplits[${i}].note=this.value;" style="font-size:13px;padding:7px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;grid-column:1/3;">
+    </div>`).join('');
+  updatePhSplitTotal();
+}
+function addPhSplit(){phSplits.push({method:'Cash',amount:0,note:''});renderPhSplits();}
+function remPhSplit(i){phSplits.splice(i,1);renderPhSplits();}
+function updatePhSplitTotal(){
+  const tot=phSplits.reduce((s,x)=>s+(x.amount||0),0);
+  $('rph-split-total').textContent=fm(tot);
+}
+function savePayFromHistory(){
+  const docId=parseInt($('ph-inv-select').value);
+  if(!docId){alert('Please select an invoice.');return;}
+  const date=$('rph-date').value;
+  const valid=phSplits.filter(s=>s.amount>0);
+  if(!valid.length){alert('Enter at least one payment amount.');return;}
+  const d=S.documents.find(x=>x.id===docId);
+  const now=Date.now();
+  valid.forEach((s,i)=>{
+    S.payments.push({id:now+i,docId,docNumber:d?d.number:'',clientId:d?d.clientId:null,date,amount:s.amount,method:s.method,note:s.note||''});
+  });
+  if(d){
+    const tot=S.payments.filter(x=>x.docId===d.id).reduce((s,x)=>s+(x.amount||0),0);
+    const di=S.documents.findIndex(x=>x.id===d.id);
+    if(di>-1)S.documents[di].status=tot>=(d.total||0)?'paid':'sent';
+  }
+  const totalAmt=valid.reduce((s,x)=>s+(x.amount||0),0);
+  persist();closeModal('modal-pay-from-history');renderPayments();renderAR();renderDash();
+  toast(valid.length>1?`Split payment of ${fm(totalAmt)} recorded!`:`Payment of ${fm(totalAmt)} recorded!`);
+}
+
+function editPayment(id){
+  const p=S.payments.find(x=>x.id===id);if(!p)return;
+  S.editingPaymentId=id;
+  // Pre-fill the edit modal
+  $('ep-date').value=p.date||tod();
+  $('ep-amount').value=p.amount||'';
+  $('ep-method').value=p.method||'Cash';
+  $('ep-note').value=p.note||'';
+  const d=S.documents.find(x=>x.id===p.docId);
+  const cl=S.clients.find(x=>x.id===p.clientId);
+  $('ep-info').innerHTML=`<strong>${p.docNumber||'—'}</strong>${cl?' — '+cl.name:''}`;
+  openModal('modal-edit-pay');
+}
+function saveEditPayment(){
+  const amt=parseFloat($('ep-amount').value)||0;
+  if(amt<=0){alert('Enter a valid amount.');return;}
+  const i=S.payments.findIndex(x=>x.id===S.editingPaymentId);
+  if(i>-1){
+    S.payments[i]={...S.payments[i],date:$('ep-date').value,amount:amt,method:$('ep-method').value,note:$('ep-note').value};
+  }
+  // Re-check if invoice is now fully paid
+  const p=S.payments[i];
+  if(p){
+    const d=S.documents.find(x=>x.id===p.docId);
+    if(d){
+      const tot=S.payments.filter(x=>x.docId===d.id).reduce((s,x)=>s+(x.amount||0),0);
+      const di=S.documents.findIndex(x=>x.id===d.id);
+      if(di>-1) S.documents[di].status=tot>=(d.total||0)?'paid':'sent';
+    }
+  }
+  S.editingPaymentId=null;
+  persist();closeModal('modal-edit-pay');renderPayments();renderAR();renderDash();toast('Payment updated!');
+}
+
+// CLIENTS
+function fmtPhone(raw){
+  const d=raw.replace(/\D/g,'');
+  if(d.length===10)return`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+  if(d.length===11&&d[0]==='1')return`(${d.slice(1,4)}) ${d.slice(4,7)}-${d.slice(7)}`;
+  return raw.trim();
+}
+function fmtEmail(raw){return raw.trim().toLowerCase();}
+function saveClient(){
+  const name=$('c-name').value.trim();if(!name){alert('Name required');return;}
+  const rawPhone=$('c-phone').value.trim();
+  const rawEmail=$('c-email').value.trim();
+  const data={name,email:fmtEmail(rawEmail),phone:rawPhone?fmtPhone(rawPhone):'',address:$('c-address').value.trim()};
+  if(S.editingClientId){
+    const i=S.clients.findIndex(c=>c.id===S.editingClientId);
+    if(i>-1)S.clients[i]={...S.clients[i],...data};
+    S.editingClientId=null;
+  } else {
+    S.clients.push({id:Date.now(),...data});
+  }
+  persist();closeModal('modal-client');['c-name','c-email','c-phone'].forEach(id=>$(id).value='');$('c-address').value='';
+  $('client-modal-title').textContent='Add client';
+  renderClients();refreshClients();toast('Client saved!');
+}
+function editClient(id,e){
+  e.stopPropagation();
+  const c=S.clients.find(x=>x.id===id);if(!c)return;
+  S.editingClientId=id;
+  $('client-modal-title').textContent='Edit client';
+  $('c-name').value=c.name||'';$('c-email').value=c.email||'';
+  $('c-phone').value=c.phone||'';$('c-address').value=c.address||'';
+  openModal('modal-client');
+}
+function delClient(id,e){
+  e.stopPropagation();if(!confirm('Delete client?'))return;
+  S.clients=S.clients.filter(c=>c.id!==id);persist();renderClients();refreshClients();toast('Client deleted.');
+}
+function renderClients(){
+  const el=$('client-list');if(!S.clients.length){el.innerHTML='<div class="empty-state">No clients yet.</div>';return;}
+  el.innerHTML=S.clients.map(c=>{
+    const ou=S.documents.filter(d=>d.type==='invoice'&&d.clientId===c.id).reduce((s,d)=>s+docBal(d),0);
+    return`<div class="client-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <div class="avatar">${ini(c.name)}</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;">${c.name}</div><div style="font-size:12px;color:var(--text2);">${c.email||''}</div></div>
+      <button class="del" onclick="editClient(${c.id},event)" title="Edit"><i class="ti ti-pencil" style="font-size:14px;"></i></button>
+      <button class="del" onclick="delClient(${c.id},event)" title="Delete"><i class="ti ti-trash" style="font-size:14px;"></i></button></div>
+      ${ou>0?`<div style="font-size:12px;margin-top:4px;">Outstanding: <strong style="color:var(--red);">${fm(ou)}</strong></div>`:''}
+      ${c.phone?`<div style="font-size:12px;color:var(--text2);margin-top:2px;"><i class="ti ti-phone" style="font-size:12px;"></i> ${c.phone}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// DOCUMENTS
+function badgeCls(d){if(d.type==='estimate')return'badge estimate';const b=docBal(d);if(b<=0)return'badge paid';if(isOD(d))return'badge overdue';return{draft:'badge draft',sent:'badge sent'}[d.status]||'badge draft';}
+function badgeLbl(d){if(d.type==='estimate')return'Estimate';if(docBal(d)<=0)return'Paid';if(isOD(d))return'Overdue';return d.status||'draft';}
+function docPaidDate(d){
+  const pays=S.payments.filter(p=>p.docId===d.id&&p.date);
+  if(!pays.length)return null;
+  return pays.reduce((max,p)=>p.date>max?p.date:max,pays[0].date);
+}
+function docRow(d){
+  const cl=S.clients.find(c=>c.id===d.clientId);
+  const paidDate=S.docsFilter==='invoice'&&d.type==='invoice'?docPaidDate(d):null;
+  const subLabel=paidDate?`Invoice · Paid ${paidDate}`:`${d.type==='estimate'?'Estimate':'Invoice'} · ${d.date||'—'}`;
+  return`<div class="doc-row" onclick="editDoc(${d.id})">
+    <i class="ti ti-file-text" style="font-size:18px;color:var(--text3);flex-shrink:0;"></i>
+    <div class="doc-info"><div class="doc-title">${d.number} — ${cl?cl.name:'No client'}</div><div class="doc-sub">${subLabel}</div></div>
+    <span class="${badgeCls(d)}">${badgeLbl(d)}</span><div class="doc-amount">${fm(d.total)}</div>
+    <button class="del" onclick="duplicateDoc(${d.id},event)" title="Duplicate as invoice"><i class="ti ti-copy" style="font-size:14px;"></i></button>
+    <button class="del" onclick="delDoc(${d.id},event)" title="Delete"><i class="ti ti-trash" style="font-size:14px;"></i></button>
+  </div>`;
+}
+function duplicateDoc(id,e){
+  e.stopPropagation();
+  const src=S.documents.find(d=>d.id===id);if(!src)return;
+  // Ask what type to create
+  const newType=src.type==='estimate'?'invoice':'estimate';
+  const label=src.type==='estimate'?'Invoice':'Estimate';
+  if(!confirm(`Create a new ${label} based on ${src.number}?`))return;
+  const newNum=(newType==='invoice'?'INV-':'EST-')+String(S.docCounter).padStart(3,'0');
+  const copy={
+    id:Date.now(),
+    type:newType,
+    number:newNum,
+    clientId:src.clientId,
+    date:tod(),
+    due:'',
+    status:'draft',
+    notes:src.notes||'',
+    lineItems:JSON.parse(JSON.stringify(src.lineItems||[])),
+    taxRate:src.taxRate||0,
+    discount:src.discount||0,
+    total:src.total||0
+  };
+  S.documents.push(copy);
+  S.docCounter++;
+  persist();
+  // Open the new doc for editing
+  initCreate(copy);
+  go('create');
+  toast(`${label} ${newNum} created from ${src.number}!`);
+}
+function renderDocs(){
+  const el=$('doc-list');let docs=[...S.documents].reverse();
+  if(S.docsFilter!=='all')docs=docs.filter(d=>d.type===S.docsFilter);
+  if(S.docsFilter==='invoice'){
+    // Sort by paid date, most recently paid first. Unpaid invoices sort last, newest first among themselves.
+    docs.sort((a,b)=>{
+      const pa=docPaidDate(a),pb=docPaidDate(b);
+      if(pa&&pb)return pb.localeCompare(pa);
+      if(pa&&!pb)return -1;
+      if(!pa&&pb)return 1;
+      return (b.date||'').localeCompare(a.date||'');
+    });
+  }
+  el.innerHTML=docs.length?docs.map(docRow).join(''):'<div class="empty-state">No documents yet.</div>';
+}
+function filterDocs(t,tab){S.docsFilter=t;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));tab.classList.add('active');renderDocs();}
+function delDoc(id,e){
+  e.stopPropagation();if(!confirm('Delete this document?'))return;
+  S.documents=S.documents.filter(d=>d.id!==id);S.payments=S.payments.filter(p=>p.docId!==id);
+  if(S.editingDocId===id)S.editingDocId=null;persist();renderDocs();renderDash();toast('Document deleted.');
+}
+function editDoc(id){const d=S.documents.find(x=>x.id===id);if(!d)return;initCreate(d);go('create');}
+
+// CREATE
+let discType='dollar';
+function setDiscType(t){
+  discType=t;
+  const db=$('disc-type-dollar'),pb=$('disc-type-pct');
+  if(db&&pb){
+    db.style.background=t==='dollar'?'var(--accent)':'var(--bg)';
+    db.style.color=t==='dollar'?'#fff':'var(--text2)';
+    pb.style.background=t==='pct'?'var(--accent)':'var(--bg)';
+    pb.style.color=t==='pct'?'#fff':'var(--text2)';
+  }
+  updateTotals();
+}
+function setDocType(t){
+  $('doc-type').value=t;
+  const ib=$('toggle-invoice'),eb=$('toggle-estimate');
+  if(ib&&eb){
+    ib.style.background=t==='invoice'?'var(--accent)':'var(--bg)';
+    ib.style.color=t==='invoice'?'#fff':'var(--text2)';
+    eb.style.background=t==='estimate'?'var(--accent)':'var(--bg)';
+    eb.style.color=t==='estimate'?'#fff':'var(--text2)';
+  }
+  const num=(t==='invoice'?'INV-':'EST-')+String(S.docCounter).padStart(3,'0');
+  if(!S.editingDocId){
+    $('doc-number').value=num;
+    const disp=$('doc-number-display');
+    if(disp)disp.textContent=num;
+  }
+  $('due-label').textContent=t==='invoice'?'Due date':'Valid until';
+  $('doc-status').value=t==='estimate'?'draft':'draft';
+}
+function newDocument(){
+  S.editingDocId=null;
+  discType='dollar';
+  initCreate(null);
+}
+function initCreate(d){
+  S.lineItems=d?JSON.parse(JSON.stringify(d.lineItems||[])):[{desc:'',qty:1,price:0}];
+  S.editingDocId=d?d.id:null;
+  const t=d?d.type:'invoice';
+  $('doc-type').value=t;
+  const num=d?d.number:(t==='invoice'?'INV-':'EST-')+String(S.docCounter).padStart(3,'0');
+  $('doc-number').value=num;
+  const disp=$('doc-number-display');if(disp)disp.textContent=num;
+  $('doc-date').value=d?d.date:tod();
+  $('doc-due').value=d?(d.due||''):'';
+  $('doc-notes').value=d?(d.notes||''):'';
+  $('tax-rate').value=d?(d.taxRate||0):0;
+  $('discount-amount').value=d?(d.discountVal||d.discount||0):0;
+  discType=d?d.discType||'dollar':'dollar';
+  $('doc-status').value=d?d.status:'draft';
+  $('doc-client').value='';
+  hideSaveIndicator();
+  setDocType(t);
+  setDiscType(discType);
+  refreshClients();if(d)$('doc-client').value=d.clientId||'';
+  renderLines();
+}
+function updateDocType(){
+  // legacy no-op — setDocType handles everything now
+}
+function refreshClients(){
+  const sel=$('doc-client'),cur=sel.value;
+  sel.innerHTML='<option value="">— select client —</option>'+S.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+function renderLines(){
+  $('line-items').innerHTML=S.lineItems.map((item,i)=>`<tr>
+    <td><input value="${(item.desc||'').replace(/"/g,'&quot;')}" oninput="updLine(${i},'desc',this.value)" placeholder="Description"></td>
+    <td><input type="number" value="${item.qty}" min="0" step="1" oninput="updLine(${i},'qty',this.value)" style="width:60px;"></td>
+    <td><input type="number" value="${item.price}" min="0" step="0.01" oninput="updLine(${i},'price',this.value)" style="width:90px;"></td>
+    <td style="padding:6px 10px;color:var(--text2);" id="rt${i}">${fm((item.qty||0)*(item.price||0))}</td>
+    <td><button class="del" onclick="remLine(${i})"><i class="ti ti-trash" style="font-size:14px;"></i></button></td>
+  </tr>`).join('');
+  updateTotals();
+}
+function updLine(i,f,v){S.lineItems[i][f]=f==='desc'?v:(parseFloat(v)||0);const el=$('rt'+i);if(el)el.textContent=fm((S.lineItems[i].qty||0)*(S.lineItems[i].price||0));updateTotals();}
+function addLine(){S.lineItems.push({desc:'',qty:1,price:0});renderLines();}
+function remLine(i){S.lineItems.splice(i,1);renderLines();}
+function calcDiscount(sub){
+  const val=parseFloat($('discount-amount').value)||0;
+  return discType==='pct'?sub*(val/100):val;
+}
+function updateTotals(){
+  const sub=S.lineItems.reduce((s,i)=>s+(i.qty||0)*(i.price||0),0);
+  const disc=calcDiscount(sub);
+  const afterDisc=Math.max(0,sub-disc);
+  const tr=parseFloat($('tax-rate').value)||0,tax=afterDisc*tr/100;
+  $('subtotal').textContent=fm(sub);
+  const dd=$('discount-display');
+  if(dd){dd.textContent=disc>0?'-'+fm(disc):'-$0.00';dd.style.color=disc>0?'var(--red)':'var(--text3)';}
+  const ta=$('tax-amount');if(ta)ta.textContent=fm(tax);
+  const gt=$('grand-total');if(gt)gt.textContent=fm(afterDisc+tax);
+}
+function getTotal(){
+  const sub=S.lineItems.reduce((s,i)=>s+(i.qty||0)*(i.price||0),0);
+  const disc=calcDiscount(sub);
+  const afterDisc=Math.max(0,sub-disc);
+  return afterDisc+afterDisc*(parseFloat($('tax-rate').value)||0)/100;
+}
+function showSaveIndicator(){
+  const ind=$('save-indicator');
+  if(!ind)return;
+  ind.style.display='flex';
+  clearTimeout(ind._t);
+  ind._t=setTimeout(()=>{ind.style.display='none';},2500);
+}
+function hideSaveIndicator(){
+  const ind=$('save-indicator');
+  if(ind)ind.style.display='none';
+}
+function saveDoc(ov){
+  const t=$('doc-type').value;
+  const sub=S.lineItems.reduce((s,i)=>s+(i.qty||0)*(i.price||0),0);
+  const discVal=parseFloat($('discount-amount').value)||0;
+  const d={id:S.editingDocId||Date.now(),type:t,number:$('doc-number').value,
+    clientId:parseInt($('doc-client').value)||null,
+    date:$('doc-date').value,due:$('doc-due').value,status:ov||$('doc-status').value||'draft',
+    notes:$('doc-notes').value,
+    lineItems:JSON.parse(JSON.stringify(S.lineItems)),
+    taxRate:parseFloat($('tax-rate').value)||0,
+    discount:calcDiscount(sub),
+    discountVal:discVal,
+    discType:discType,
+    total:getTotal()};
+  if(S.editingDocId){const i=S.documents.findIndex(x=>x.id===S.editingDocId);if(i>-1)S.documents[i]=d;else S.documents.push(d);}
+  else{S.documents.push(d);S.editingDocId=d.id;S.docCounter++;}
+  persist();showSaveIndicator();return d;
+}
+
+// EXPENSES
+function renderExpenses(){
+  const cats=[...new Set(S.expenses.map(e=>e.category||'Other'))].sort();
+  const sel=$('exp-filter-cat');const cur=sel.value;
+  sel.innerHTML='<option value="">All categories</option>'+EXP_CATS.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if(cur)sel.value=cur;
+  const filter=sel.value;
+  const sortVal=($('exp-sort')||{value:'date-desc'}).value||'date-desc';
+  let exps=[...S.expenses].filter(e=>!filter||e.category===filter);
+  if(sortVal==='date-desc')exps.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  else if(sortVal==='date-asc')exps.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  else if(sortVal==='amount-desc')exps.sort((a,b)=>(b.amount||0)-(a.amount||0));
+  else if(sortVal==='amount-asc')exps.sort((a,b)=>(a.amount||0)-(b.amount||0));
+  // Metrics
+  const total=S.expenses.reduce((s,e)=>s+(e.amount||0),0);
+  const deductible=S.expenses.filter(e=>e.deductible).reduce((s,e)=>s+(e.amount||0),0);
+  const now=new Date();
+  const thisMonth=S.expenses.filter(e=>{const d=new Date(e.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).reduce((s,e)=>s+(e.amount||0),0);
+  const byCat={};S.expenses.forEach(e=>{const c=e.category||'Other';byCat[c]=(byCat[c]||0)+(e.amount||0);});
+  const topCat=Object.entries(byCat).sort((a,b)=>b[1]-a[1])[0];
+  $('exp-metrics').innerHTML=`
+    <div class="metric red"><div class="label">Total expenses</div><div class="value">${fm(total)}</div></div>
+    <div class="metric"><div class="label">This month</div><div class="value">${fm(thisMonth)}</div></div>
+    <div class="metric green"><div class="label">Tax deductible</div><div class="value">${fm(deductible)}</div></div>
+    <div class="metric amber"><div class="label">Top category</div><div class="value" style="font-size:14px;margin-top:4px;">${topCat?topCat[0]:'—'}</div></div>`;
+  const tb=$('exp-tbody'),em=$('exp-empty');
+  if(!exps.length){tb.innerHTML='';em.classList.remove('hidden');return;}
+  em.classList.add('hidden');
+  tb.innerHTML=exps.map(e=>`<tr>
+    <td style="color:var(--text2);">${e.date||'—'}</td>
+    <td><strong>${e.description||'—'}</strong>${e.notes?`<div style="font-size:11px;color:var(--text2);">${e.notes}</div>`:''}</td>
+    <td><span class="badge draft">${e.category||'Other'}</span></td>
+    <td style="color:var(--text2);">${e.vendor||'—'}</td>
+    <td style="text-align:center;">${e.deductible?'<span style="color:var(--green);">✓</span>':'<span style="color:var(--text3);">—</span>'}</td>
+    <td style="text-align:right;font-weight:700;color:var(--red);">${fm(e.amount)}</td>
+    <td><button class="del" onclick="editExpense(${e.id})"><i class="ti ti-pencil" style="font-size:14px;"></i></button>
+    <button class="del" onclick="delExpense(${e.id})"><i class="ti ti-trash" style="font-size:14px;"></i></button></td>
+  </tr>`).join('');
+}
+function openNewExpense(forceRecurring){
+  S.editingExpId=null;$('exp-modal-title').textContent='Add expense';
+  $('ex-date').value=tod();$('ex-desc').value='';$('ex-amount').value='';
+  $('ex-cat').value='Other';$('ex-vendor').value='';
+  $('ex-deductible').checked=true;$('ex-notes').value='';
+  $('ex-recurring').checked=!!forceRecurring;$('ex-recur-end').value='';
+  toggleRecurringFields();openModal('modal-expense');
+}
+function toggleRecurringFields(){
+  $('ex-recurring-fields').style.display=$('ex-recurring').checked?'flex':'none';
+}
+function saveExpense(){
+  const desc=$('ex-desc').value.trim();if(!desc){alert('Description required');return;}
+  const amt=parseFloat($('ex-amount').value)||0;if(amt<=0){alert('Enter a valid amount');return;}
+  const isRecurring=$('ex-recurring').checked;
+  const exp={
+    id:S.editingExpId||Date.now(),date:$('ex-date').value,description:desc,
+    amount:amt,category:$('ex-cat').value,vendor:$('ex-vendor').value.trim(),
+    deductible:$('ex-deductible').checked,notes:$('ex-notes').value.trim(),
+    recurring:isRecurring,recurEnd:isRecurring?$('ex-recur-end').value:''
+  };
+  if(S.editingExpId){const i=S.expenses.findIndex(e=>e.id===S.editingExpId);if(i>-1)S.expenses[i]=exp;else S.expenses.push(exp);}
+  else S.expenses.push(exp);
+  S.editingExpId=null;persist();closeModal('modal-expense');renderExpenses();
+  if($('page-recurring')&&!$('page-recurring').classList.contains('hidden'))renderRecurring();
+  renderDash();toast(isRecurring?'Recurring expense saved!':'Expense saved!');
+}
+function editExpense(id){
+  const e=S.expenses.find(x=>x.id===id);if(!e)return;
+  S.editingExpId=id;$('exp-modal-title').textContent='Edit expense';
+  $('ex-date').value=e.date||'';$('ex-desc').value=e.description||'';
+  $('ex-amount').value=e.amount||'';$('ex-cat').value=e.category||'Other';
+  $('ex-vendor').value=e.vendor||'';$('ex-deductible').checked=e.deductible!==false;
+  $('ex-notes').value=e.notes||'';
+  $('ex-recurring').checked=!!e.recurring;$('ex-recur-end').value=e.recurEnd||'';
+  toggleRecurringFields();openModal('modal-expense');
+}
+function delExpense(id){
+  if(!confirm('Delete this expense?'))return;
+  S.expenses=S.expenses.filter(e=>e.id!==id);persist();renderExpenses();renderDash();toast('Expense deleted.');
+}
+function renderRecurring(){
+  const recurring=S.expenses.filter(e=>e.recurring);
+  const tb=$('recurring-tbody'),em=$('recurring-empty');
+  if(!recurring.length){tb.innerHTML='';em.classList.remove('hidden');return;}
+  em.classList.add('hidden');
+  tb.innerHTML=recurring.map(e=>{
+    const day=e.date?+e.date.slice(8,10):'—';
+    const ended=e.recurEnd&&new Date(e.recurEnd)<new Date();
+    return`<tr>
+      <td><strong>${e.description}</strong>${ended?'<span class="badge draft" style="margin-left:6px;font-size:10px;">Ended</span>':''}</td>
+      <td><span class="badge draft">${e.category||'Other'}</span></td>
+      <td style="color:var(--text2);">${e.vendor||'—'}</td>
+      <td style="text-align:center;">${day}</td>
+      <td style="color:var(--text2);">${e.recurEnd||'Ongoing'}</td>
+      <td style="text-align:center;">${e.deductible?'<span style="color:var(--green);">✓</span>':'—'}</td>
+      <td style="text-align:right;font-weight:700;color:var(--red);">${fm(e.amount)}</td>
+      <td>
+        <button class="del" onclick="editExpense(${e.id})" title="Edit"><i class="ti ti-pencil" style="font-size:14px;"></i></button>
+        <button class="del" onclick="stopRecurring(${e.id})" title="Stop recurring"><i class="ti ti-player-stop" style="font-size:14px;"></i></button>
+        <button class="del" onclick="delExpense(${e.id})" title="Delete"><i class="ti ti-trash" style="font-size:14px;"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function stopRecurring(id){
+  if(!confirm('Stop this recurring expense? It will no longer auto-generate each month.'))return;
+  const i=S.expenses.findIndex(e=>e.id===id);
+  if(i>-1){S.expenses[i].recurring=false;S.expenses[i].recurEnd=tod();}
+  persist();renderRecurring();toast('Recurring expense stopped.');
+}
+function processRecurring(){
+  // Auto-generate this month entries for any recurring expenses
+  const now=new Date();
+  const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  let added=0;
+  S.expenses.filter(e=>e.recurring).forEach(e=>{
+    if(!e.date)return;
+    // Check if end date has passed
+    if(e.recurEnd&&new Date(e.recurEnd)<now)return;
+    const day=e.date.slice(8,10);
+    const thisMonthDate=`${ym}-${day}`;
+    // Check if already logged this month (same recurring parent via recurParentId, or same desc+amount+month)
+    const alreadyLogged=S.expenses.some(x=>x.recurParentId===e.id&&x.date&&x.date.startsWith(ym));
+    if(!alreadyLogged&&e.id){
+      // Don't duplicate the template itself — only add a copy if the template date is not this month
+      if(!e.date.startsWith(ym)){
+        S.expenses.push({
+          id:Date.now()+Math.random(),
+          date:thisMonthDate,
+          description:e.description,
+          amount:e.amount,
+          category:e.category,
+          vendor:e.vendor,
+          deductible:e.deductible,
+          notes:e.notes||'',
+          recurring:false,
+          recurParentId:e.id
+        });
+        added++;
+      }
+    }
+  });
+  if(added>0){persist();toast(`${added} recurring expense${added>1?'s':''} auto-logged for this month!`);}
+}
+
+// CATALOG
+function saveCatalogItem(){
+  const name=$('cat-name').value.trim();if(!name){alert('Name required');return;}
+  const item={id:S.editingCatId||Date.now(),name,description:$('cat-desc').value.trim(),price:parseFloat($('cat-price').value)||0,unit:$('cat-unit').value};
+  if(S.editingCatId){const i=S.catalog.findIndex(x=>x.id===S.editingCatId);if(i>-1)S.catalog[i]=item;else S.catalog.push(item);}
+  else S.catalog.push(item);
+  S.editingCatId=null;persist();closeModal('modal-catalog');renderCatalog();toast('Catalog item saved!');
+}
+function renderCatalog(){
+  const el=$('catalog-grid'),em=$('catalog-empty');
+  if(!S.catalog.length){el.innerHTML='';em.classList.remove('hidden');return;}
+  em.classList.add('hidden');
+  el.innerHTML=S.catalog.map(item=>`<div class="catalog-card">
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:14px;font-weight:600;">${item.name}</div>
+      ${item.description?`<div style="font-size:12px;color:var(--text2);margin-top:2px;">${item.description}</div>`:''}
+      <div style="font-size:13px;font-weight:700;color:var(--accent);margin-top:6px;">${fm(item.price)} <span style="font-size:11px;color:var(--text2);font-weight:400;">/ ${item.unit||'each'}</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <button class="del" onclick="editCatalog(${item.id})"><i class="ti ti-pencil" style="font-size:14px;"></i></button>
+      <button class="del" onclick="delCatalog(${item.id})"><i class="ti ti-trash" style="font-size:14px;"></i></button>
+    </div>
+  </div>`).join('');
+}
+function editCatalog(id){
+  const item=S.catalog.find(x=>x.id===id);if(!item)return;
+  S.editingCatId=id;$('cat-modal-title').textContent='Edit item';
+  $('cat-name').value=item.name;$('cat-desc').value=item.description||'';
+  $('cat-price').value=item.price||'';$('cat-unit').value=item.unit||'each';
+  openModal('modal-catalog');
+}
+function delCatalog(id){
+  if(!confirm('Delete this catalog item?'))return;
+  S.catalog=S.catalog.filter(x=>x.id!==id);persist();renderCatalog();toast('Item deleted.');
+}
+function openCatalogPick(){
+  const el=$('catalog-pick-list');
+  if(!S.catalog.length){el.innerHTML='<div class="empty-state">No catalog items yet. Add some in the Product catalog section.</div>';return;}
+  el.innerHTML=S.catalog.map(item=>`<div style="display:flex;align-items:center;gap:10px;padding:10px;border:0.5px solid var(--border);border-radius:var(--radius);cursor:pointer;" onclick="addFromCatalog(${item.id})">
+    <div style="flex:1;"><div style="font-size:13px;font-weight:600;">${item.name}</div><div style="font-size:12px;color:var(--text2);">${item.description||''}</div></div>
+    <div style="font-size:13px;font-weight:700;color:var(--accent);">${fm(item.price)}</div>
+    <button class="btn primary" style="font-size:12px;padding:5px 10px;">Add</button>
+  </div>`).join('');
+  openModal('modal-catalog-pick');
+}
+function addFromCatalog(id){
+  const item=S.catalog.find(x=>x.id===id);if(!item)return;
+  S.lineItems.push({desc:item.name+(item.description?' — '+item.description:''),qty:1,price:item.price||0});
+  renderLines();closeModal('modal-catalog-pick');toast(`${item.name} added!`);
+}
+
+// BRANDING
+function loadBranding(){
+  const b=S.branding;['company','email','phone','website','address','paymentInfo'].forEach(k=>{const el=$('b-'+k);if(el)el.value=b[k]||'';});
+  const prev=$('logo-preview');prev.querySelectorAll('img').forEach(i=>i.remove());
+  if(b.logoDataUrl){$('logo-placeholder').classList.add('hidden');const img=document.createElement('img');img.src=b.logoDataUrl;prev.appendChild(img);}
+  else $('logo-placeholder').classList.remove('hidden');
+}
+function saveBranding(){['company','email','phone','website','address','paymentInfo'].forEach(k=>{S.branding[k]=$('b-'+k).value;});persist();toast('Company info saved!');}
+function previewLogo(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{S.branding.logoDataUrl=ev.target.result;const prev=$('logo-preview');$('logo-placeholder').classList.add('hidden');prev.querySelectorAll('img').forEach(i=>i.remove());const img=document.createElement('img');img.src=ev.target.result;prev.appendChild(img);};r.readAsDataURL(f);}
+function removeLogo(){S.branding.logoDataUrl='';$('logo-preview').querySelectorAll('img').forEach(i=>i.remove());$('logo-placeholder').classList.remove('hidden');$('logo-upload').value='';}
+
+// APPEARANCE
+function loadAppearance(){
+  const a=S.appearance;
+  $('ap-accent').value=a.accent||'#2C4A7C';$('ap-hbg').value=a.headerBg||'#2C4A7C';
+  $('ap-font').value=a.font||"Georgia,'Times New Roman',serif";
+  $('ap-logo').checked=a.showLogo!==false;$('ap-addr').checked=a.showAddr!==false;
+  $('ap-footer').value=a.footer||'';$('ap-wm').checked=!!a.wmEnabled;
+  $('ap-wmt').value=a.wmText||'DRAFT';$('ap-wmc').value=a.wmColor||'#cccccc';
+  $('ap-review').checked=!!a.reviewEnabled;$('ap-review-link').value=a.reviewLink||'';
+  renderASw();renderHSw();updateFontPrev();updateWmPrev();
+}
+function renderASw(){const a=S.appearance.accent||'#2C4A7C';$('accent-sw').innerHTML=AP_PAL.map(c=>`<div class="color-swatch" onclick="setAccent('${c}',true)" style="background:${c};border-color:${c===a?'var(--text)':'transparent'};"></div>`).join('');}
+function renderHSw(){const h=S.appearance.headerBg||'#2C4A7C';$('header-sw').innerHTML=HP_PAL.map(c=>`<div class="color-swatch" onclick="setHBg('${c}',true)" style="background:${c};border:2px solid ${c===h?'var(--text)':'var(--border2)'};"></div>`).join('');}
+function setAccent(c,r){S.appearance.accent=c;$('ap-accent').value=c;if(r)renderASw();}
+function setHBg(c,r){S.appearance.headerBg=c;$('ap-hbg').value=c;if(r)renderHSw();}
+function updateFontPrev(){const f=$('ap-font').value;const el=$('font-prev');el.style.fontFamily=f;el.textContent='The quick brown fox — Invoice #INV-001 — C3 Collective';}
+function updateWmPrev(){const en=$('ap-wm').checked,t=$('ap-wmt').value,c=$('ap-wmc').value,l=$('wm-prev');l.textContent=t;l.style.color=c;l.style.borderColor=c;l.style.opacity=en?'0.85':'0.3';}
+function saveAppearance(){const a=S.appearance;a.accent=$('ap-accent').value;a.headerBg=$('ap-hbg').value;a.font=$('ap-font').value;a.showLogo=$('ap-logo').checked;a.showAddr=$('ap-addr').checked;a.footer=$('ap-footer').value;a.wmEnabled=$('ap-wm').checked;a.wmText=$('ap-wmt').value;a.wmColor=$('ap-wmc').value;a.reviewEnabled=$('ap-review').checked;a.reviewLink=$('ap-review-link').value.trim();persist();toast('Output style saved!');}
+
+// DATA & BACKUP
+function renderDataPage(){
+  const docs=S.documents.length,clients=S.clients.length,payments=S.payments.length,expenses=S.expenses.length;
+  $('data-stats').innerHTML=`<strong>Current data:</strong> ${clients} clients · ${docs} documents · ${payments} payments · ${expenses} expenses`;
+  $('last-sync').textContent=lastSyncText();
+  $('legacy-card').classList.toggle('hidden',!localStorage.getItem(LS_LEGACY));
+}
+function downloadLegacy(){
+  const raw=localStorage.getItem(LS_LEGACY);if(!raw)return;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(Object.assign({version:2},JSON.parse(raw)),null,2)],{type:'application/json'}));
+  a.download=`C3Collective_OlderLocalCopy_${tod()}.json`;a.click();
+}
+function exportData(){
+  const data={version:2,exportedAt:new Date().toISOString(),clients:S.clients,documents:S.documents,payments:S.payments,expenses:S.expenses,catalog:S.catalog,branding:S.branding,appearance:S.appearance,docCounter:S.docCounter};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`C3Collective_Backup_${tod()}.json`;a.click();
+  toast('Backup downloaded!');
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  if(!confirm('This will replace ALL current data with the backup. Are you sure?')){e.target.value='';return;}
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      S.clients=d.clients||[];S.documents=d.documents||[];S.payments=d.payments||[];
+      S.expenses=d.expenses||[];S.catalog=d.catalog||[];S.branding=Object.assign(defaultBranding(),d.branding||S.branding);
+      S.appearance=d.appearance||S.appearance;S.docCounter=d.docCounter||1;
+      ensureIds(S);persist();if(syncer)syncer.flush();renderDataPage();toast('Data restored successfully!');
+    }catch(err){alert('Invalid backup file. Please use a file exported from C3 Collective.');}
+    e.target.value='';
+  };
+  r.readAsText(file);
+}
+
+// PDF EXPORT
+function exportPDF(){
+  const doc=saveDoc();const cl=S.clients.find(c=>c.id===doc.clientId);
+  const b=S.branding,a=S.appearance;
+  const sub=doc.lineItems.reduce((s,i)=>s+(i.qty||0)*(i.price||0),0);
+  const tax=sub*(doc.taxRate||0)/100,total=sub+tax;
+  const ac=a.accent||'#2C4A7C',hb=a.headerBg||ac,font=a.font||"Georgia,'Times New Roman',serif";
+  const luma=hex=>{if(!hex||hex.length<7)return 128;return 0.299*parseInt(hex.slice(1,3),16)+0.587*parseInt(hex.slice(3,5),16)+0.114*parseInt(hex.slice(5,7),16);};
+  const htc=luma(hb)>140?'#1a1a1a':'#ffffff';
+  const logoH=(a.showLogo!==false&&b.logoDataUrl)?`<img src="${b.logoDataUrl}" style="height:90px;max-width:240px;object-fit:contain;display:block;margin-bottom:8px;">`:'';
+  const compH=`<div style="font-size:22px;font-weight:700;">${b.company||'C3 Collective'}</div>`;
+  const addrH=a.showAddr!==false?[b.address?b.address.replace(/\n/g,'<br>'):'',b.email,b.phone].filter(Boolean).join('<br>'):'';
+  const fromH=[b.company?`<strong>${b.company}</strong>`:'',b.address?b.address.replace(/\n/g,'<br>'):'',b.email,b.phone,b.website||'c3collectiveny.com'].filter(Boolean).join('<br>');
+  const toH=cl?[`<strong>${cl.name}</strong>`,cl.address?cl.address.replace(/\n/g,'<br>'):'',cl.email||'',cl.phone||''].filter(Boolean).join('<br>'):'—';
+  const itemsH=doc.lineItems.map((item,idx)=>`<tr style="background:${idx%2===0?'#fff':'#fafafa'};"><td style="padding:10px 14px;font-size:13px;border-bottom:1px solid #e8e8e8;">${item.desc||''}</td><td style="padding:10px 14px;font-size:13px;text-align:center;border-bottom:1px solid #e8e8e8;">${item.qty}</td><td style="padding:10px 14px;font-size:13px;text-align:right;border-bottom:1px solid #e8e8e8;">${fm(item.price)}</td><td style="padding:10px 14px;font-size:13px;text-align:right;font-weight:700;border-bottom:1px solid #e8e8e8;">${fm(item.qty*item.price)}</td></tr>`).join('');
+  const docPayments=S.payments.filter(p=>p.docId===doc.id);
+  const paidSoFar=docPayments.reduce((s,p)=>s+(p.amount||0),0);
+  const balDue=Math.max(0,total-paidSoFar);
+  const disc=doc.discount||0;
+  const afterDisc=Math.max(0,total-disc- (total - (total/(1+(doc.taxRate||0)/100))));
+  // Recalc properly
+  const subForPDF=doc.lineItems.reduce((s,i)=>s+(i.qty||0)*(i.price||0),0);
+  const discForPDF=doc.discount||0;
+  const afterDiscForPDF=Math.max(0,subForPDF-discForPDF);
+  const taxForPDF=afterDiscForPDF*(doc.taxRate||0)/100;
+  const totalForPDF=afterDiscForPDF+taxForPDF;
+  const payH=docPayments.length?`<div style="margin-bottom:10px;"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#aaa;font-weight:700;margin-bottom:6px;">Payments received</div><table style="width:100%;border-collapse:collapse;font-size:11.5px;"><thead><tr>${['Date','Method','Reference','Amount'].map(h=>`<th style="text-align:left;padding:5px 10px;background:#f0f0f0;color:#555;font-size:10px;text-transform:uppercase;">${h}</th>`).join('')}</tr></thead><tbody>${docPayments.map(p=>`<tr><td style="padding:5px 10px;border-bottom:1px solid #eee;">${p.date}</td><td style="padding:5px 10px;border-bottom:1px solid #eee;">${p.method}</td><td style="padding:5px 10px;border-bottom:1px solid #eee;color:#777;">${p.note||''}</td><td style="padding:5px 10px;border-bottom:1px solid #eee;text-align:right;color:#0F6E56;font-weight:600;">${fm(p.amount)}</td></tr>`).join('')}</tbody></table></div>`:'';
+  const payInfoTxt=((S.branding&&S.branding.paymentInfo)||'').trim();
+  const paymentInfoBlock=(doc.type==='invoice'&&payInfoTxt)?`<div style="margin-bottom:10px;background:#f8f7f4;border-left:4px solid ${ac};padding:8px 16px;border-radius:2px;"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#aaa;font-weight:700;margin-bottom:5px;">Payment information</div><div style="font-size:11.5px;color:#444;line-height:1.55;">${escH(payInfoTxt).replace(/\r?\n/g,'<br>')}</div></div>`:'';
+  const footT=a.footer||[b.company,b.email,b.website||'c3collectiveny.com'].filter(Boolean).join(' · ');
+  const reviewH=a.reviewEnabled?`<div style="text-align:center;background:#faf8f4;border:1px solid #eee;border-radius:6px;padding:9px 16px;margin-bottom:10px;font-size:11.5px;color:#444;line-height:1.5;"><strong style="color:${ac};">Enjoyed working with ${b.company||'us'}?</strong><br>${a.reviewLink?`A quick <a href="${a.reviewLink}" style="color:${ac};font-weight:700;">Google review</a> means the world to a small business like ours!`:'A quick Google review means the world to a small business like ours — just search us on Google!'}</div>`:'';
+  const wmH=a.wmEnabled?`<div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);font-family:${font};font-size:80px;font-weight:700;color:${a.wmColor||'#ccc'};opacity:0.18;letter-spacing:0.12em;pointer-events:none;white-space:nowrap;z-index:0;">${a.wmText||'DRAFT'}</div>`:'';
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${doc.number}</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@400;500;600;700&family=Merriweather:wght@300;400;700&family=EB+Garamond:wght@400;500;600&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+@page{size:auto;margin:8mm 12mm;}
+body{font-family:${font};color:#1a1a1a;background:#fff;font-size:12.5px;}
+.pg{width:100%;max-width:680px;margin:0 auto;padding:0 0 10px;}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 20px;background:${hb};border-radius:6px;margin-bottom:14px;}
+.hdr-left{flex:1;min-width:0;padding-right:20px;}
+.hdr-right{text-align:right;flex-shrink:0;}
+.doc-type{font-size:20px;font-weight:700;letter-spacing:0.05em;color:${htc};margin-bottom:4px;}
+.dmeta{font-size:11.5px;line-height:1.6;color:${luma(hb)>140?'#444':'rgba(255,255,255,0.85)'};}
+.faddr{font-size:10.5px;line-height:1.5;color:${luma(hb)>140?'#666':'rgba(255,255,255,0.75)'};margin-top:3px;}
+.parties{display:flex;justify-content:space-between;margin-bottom:14px;gap:20px;padding-bottom:12px;border-bottom:2px solid ${ac};}
+.plbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#aaa;font-weight:700;margin-bottom:5px;}
+.pdet{font-size:11.5px;color:#333;line-height:1.5;}
+table{width:100%;border-collapse:collapse;margin-bottom:12px;}
+thead th{background:${hb};color:${htc};padding:6px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+thead th:first-child{text-align:left;}thead th:nth-child(2){text-align:center;}
+thead th:nth-child(3),thead th:nth-child(4){text-align:right;}
+tbody td{padding:6px 12px;font-size:11.5px;border-bottom:1px solid #eee;}
+tbody tr:last-child td{border-bottom:none;}
+tfoot td{padding:4px 12px;font-size:11.5px;color:#555;border:none;}
+tfoot tr.grand td{font-size:14px;font-weight:700;color:${ac};padding-top:7px;border-top:2px solid ${ac};}
+tfoot tr.balance td{font-size:15px;font-weight:800;color:#1a1a1a;padding-top:4px;}
+.notes{background:#f8f7f4;border-left:3px solid ${ac};padding:8px 16px;font-size:11.5px;color:#555;margin-bottom:10px;line-height:1.45;}
+.pay-info{background:#f8f7f4;border-left:3px solid ${ac};padding:8px 16px;font-size:11.5px;color:#444;margin-bottom:10px;line-height:1.6;}
+.pay-info-title{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#aaa;font-weight:700;margin-bottom:4px;}
+.foot{text-align:center;font-size:10px;color:#777;padding-top:8px;border-top:1px solid #eee;margin-top:2px;}
+@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}body{margin:0;padding:0;}}
+</style></head><body>${wmH}
+<div class="pg">
+<div class="hdr">
+  <div class="hdr-left">${logoH}${compH}${addrH?`<div class="faddr">${addrH}</div>`:''}</div>
+  <div class="hdr-right">
+    <div class="doc-type">${doc.type==='invoice'?'INVOICE':'ESTIMATE'}</div>
+    <div class="dmeta"><strong>${doc.number}</strong><br>Date: ${doc.date||'—'}${doc.due?`<br>${doc.type==='invoice'?'Due':'Valid until'}: ${doc.due}`:''}</div>
+  </div>
+</div>
+<div class="parties">
+  <div><div class="plbl">From</div><div class="pdet">${fromH||'—'}</div></div>
+  <div style="text-align:right;"><div class="plbl">Bill to</div><div class="pdet">${toH}</div></div>
+</div>
+<table>
+<thead><tr><th style="width:44%;">Description</th><th style="width:12%;">Qty</th><th style="width:20%;">Unit price</th><th style="width:24%;">Total</th></tr></thead>
+<tbody>${itemsH}</tbody>
+<tfoot>
+  <tr><td colspan="3" style="text-align:right;padding-right:12px;">Subtotal</td><td style="text-align:right;">${fm(subForPDF)}</td></tr>
+  ${discForPDF>0?`<tr><td colspan="3" style="text-align:right;padding-right:12px;color:#A32D2D;">Discount</td><td style="text-align:right;color:#A32D2D;">-${fm(discForPDF)}</td></tr>`:''}
+  ${doc.taxRate?`<tr><td colspan="3" style="text-align:right;padding-right:12px;">Tax (${doc.taxRate}%)</td><td style="text-align:right;">${fm(taxForPDF)}</td></tr>`:''}
+  <tr class="grand"><td colspan="3" style="text-align:right;padding-right:12px;">Total</td><td style="text-align:right;">${fm(totalForPDF)}</td></tr>
+  ${paidSoFar>0?`<tr><td colspan="3" style="text-align:right;padding-right:12px;color:#0F6E56;">Amount paid</td><td style="text-align:right;color:#0F6E56;">-${fm(paidSoFar)}</td></tr><tr class="balance"><td colspan="3" style="text-align:right;padding-right:12px;">Balance due</td><td style="text-align:right;">${fm(Math.max(0,totalForPDF-paidSoFar))}</td></tr>`:''}
+</tfoot>
+</table>
+${payH}${paymentInfoBlock}${doc.type==='estimate'?`<div style="background:#f8f7f4;border-left:3px solid ${ac};padding:10px 18px;font-size:11.5px;color:#444;margin-bottom:10px;"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#aaa;font-weight:700;margin-bottom:6px;">ALL PRICES INCLUDE</div><div style="display:flex;flex-direction:column;gap:5px;line-height:1.5;"><div><span style="color:${ac};margin-right:8px;">&#10022;</span>Your original tapes returned to you</div><div><span style="color:${ac};margin-right:8px;">&#10022;</span>Footage transferred to a dedicated USB drive (Type A &amp; C)</div><div><span style="color:${ac};margin-right:8px;">&#10022;</span>Files labeled to match your tape names</div><div><span style="color:${ac};margin-right:8px;">&#10022;</span>I\'ll help you view them on any TV, computer, or laptop (up to 30 minutes)</div></div></div>`:''}${doc.notes?`<div class="notes">${doc.notes.replace(/\n/g,'<br>')}</div>`:''}
+${reviewH}<div class="foot">${footT}</div>
+</div></body></html>`;
+  const win=window.open('','_blank','width=920,height=720');
+  if(win){win.document.write(html);win.document.close();setTimeout(()=>{win.focus();win.print();},900);toast('PDF ready — Print → Save as PDF');}
+  else toast('Allow popups to export PDF');
+}
+
+// INIT
+function bootApp(){
+  if(appBooted)return;appBooted=true;
+  processRecurring();
+  renderDash();
+  renderLines();
+  refreshClients();
+  $('doc-date').value=tod();
+  $('doc-number').value='INV-'+String(S.docCounter).padStart(3,'0');
+  renderASw();
+  renderHSw();
+  document.querySelectorAll('[onclick*="modal-catalog-pick"]').forEach(el=>el.setAttribute('onclick',"openCatalogPick()"));
+}
+initCloud();
+</script>
+</body>
+</html>
