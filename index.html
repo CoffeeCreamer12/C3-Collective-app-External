@@ -515,7 +515,7 @@ table.dt tr:hover td{background:var(--bg2);}
         <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px;align-items:end;">
           <div class="field">
             <label>Client</label>
-            <select id="doc-client" style="font-size:14px;padding:9px 10px;"><option value="">— select client —</option></select>
+            <select id="doc-client" onchange="docClientChanged()" style="font-size:14px;padding:9px 10px;"><option value="">— select client —</option></select>
           </div>
           <div class="field">
             <label>Date</label>
@@ -587,10 +587,13 @@ table.dt tr:hover td{background:var(--bg2);}
             <div style="border-top:0.5px solid var(--border);padding-top:10px;">
               <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3);margin-bottom:8px;">Tax</div>
               <div style="display:flex;align-items:center;gap:6px;">
-                <input id="tax-rate" type="number" min="0" max="100" value="0" oninput="updateTotals()" placeholder="0" style="width:60px;font-size:13px;padding:5px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none;">
+                <input id="tax-rate" type="number" min="0" max="100" value="0" oninput="taxTyped()" placeholder="0" style="width:60px;font-size:13px;padding:5px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;outline:none;">
                 <span style="font-size:13px;color:var(--text2);">%</span>
                 <span id="tax-amount" style="margin-left:auto;font-size:13px;color:var(--text2);">$0.00</span>
               </div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;margin-top:10px;"><input type="checkbox" id="doc-exempt" onchange="docExemptToggled()"> Tax exempt for this document</label>
+              <div class="field hidden" id="doc-exempt-id-wrap" style="margin-top:6px;"><input id="doc-exempt-id" placeholder="Exemption certificate / ID (optional)" style="font-size:12px;padding:6px 8px;"></div>
+              <div id="doc-exempt-hint" class="hidden" style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.4;"></div>
             </div>
             <div style="border-top:1.5px solid var(--border);padding-top:12px;display:flex;justify-content:space-between;align-items:baseline;">
               <span style="font-family:'Playfair Display',serif;font-size:15px;font-weight:700;">Total</span>
@@ -715,6 +718,7 @@ table.dt tr:hover td{background:var(--bg2);}
           <div class="field"><label for="dw-validlabel">“Valid until” label</label><input id="dw-validlabel" placeholder="Valid until"></div>
           <div class="field"><label for="dw-duelabel">“Due” label</label><input id="dw-duelabel" placeholder="Due"></div>
           <div class="field"><label for="dw-taxlabel">Tax label</label><input id="dw-taxlabel" placeholder="Tax"></div>
+          <div class="field"><label for="dw-exemptlabel">Tax exempt label</label><input id="dw-exemptlabel" placeholder="Tax exempt"></div>
         </div>
         <div style="font-size:12px;color:var(--text2);margin-top:8px;line-height:1.5;">New estimates fill in “Valid until” automatically (date + days). You can still type any date on a document. Use 0 days to leave it blank.</div>
         <button class="btn" type="button" style="margin-top:12px;" onclick="dwReset()"><i class="ti ti-restore"></i> Restore original wording</button>
@@ -862,6 +866,8 @@ table.dt tr:hover td{background:var(--bg2);}
       <div class="field"><label>Email</label><input id="c-email" placeholder="hello@acme.com" type="email"></div>
       <div class="field"><label>Phone</label><input id="c-phone" placeholder="+1 (555) 000-0000"></div>
       <div class="field"><label>Address</label><textarea id="c-address" placeholder="123 Main St&#10;City, State 12345"></textarea></div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer;"><input type="checkbox" id="c-exempt" onchange="$('c-exempt-id-wrap').classList.toggle('hidden',!this.checked)"> Tax exempt</label>
+      <div class="field hidden" id="c-exempt-id-wrap"><label for="c-exempt-id">Exemption certificate / ID (optional)</label><input id="c-exempt-id" placeholder="e.g. EX-12345"><div style="font-size:11px;color:var(--text3);">New estimates and invoices for this client start at 0% tax and print this ID.</div></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:18px;justify-content:flex-end;">
       <button class="btn" onclick="closeModal('modal-client')">Cancel</button>
@@ -1188,14 +1194,14 @@ function defaultAppearance(){return {accent:'#2C4A7C',headerBg:'#2C4A7C',font:"G
 // DOCUMENT WORDING (stored inside the settings row as branding.docWording; no schema change)
 const DW_VIDEO_INC=['Your original tapes returned to you','Footage transferred to a dedicated USB drive (Type A & C)','Files labeled to match your tape names',"I'll help you view them on any TV, computer, or laptop (up to 30 minutes)"].join('\n');
 const DW_AUDIO_INC=['Your original tapes returned to you','Audio files transferred to a dedicated USB drive','Files labeled to match your tape names',"I'll help you play them on any computer or phone (up to 30 minutes)"].join('\n');
-function defaultWording(){return {validDays:30,includeOn:'estimate',estimateTitle:'ESTIMATE',invoiceTitle:'INVOICE',validLabel:'Valid until',dueLabel:'Due',taxLabel:'Tax',defaultPreset:'video',
+function defaultWording(){return {validDays:30,includeOn:'estimate',estimateTitle:'ESTIMATE',invoiceTitle:'INVOICE',validLabel:'Valid until',dueLabel:'Due',taxLabel:'Tax',taxExemptLabel:'Tax exempt',defaultPreset:'video',
   presets:[{id:'video',name:'Video / film',heading:'All prices include',includes:DW_VIDEO_INC,note:'',thanks:''},{id:'audio',name:'Audio',heading:'All prices include',includes:DW_AUDIO_INC,note:'',thanks:''}]};}
 // Always returns a complete, safe object, whatever (or nothing) is stored.
 function getWording(){
   const base=defaultWording(),raw=(S.branding&&S.branding.docWording&&typeof S.branding.docWording==='object')?S.branding.docWording:{};
   const str=(v,d)=>typeof v==='string'?v:d;
   const w={};
-  ['estimateTitle','invoiceTitle','validLabel','dueLabel','taxLabel'].forEach(k=>{w[k]=str(raw[k],base[k]);});
+  ['estimateTitle','invoiceTitle','validLabel','dueLabel','taxLabel','taxExemptLabel'].forEach(k=>{w[k]=str(raw[k],base[k]);});
   const vd=parseInt(raw.validDays,10);w.validDays=Number.isFinite(vd)&&vd>=0?Math.min(vd,3650):base.validDays;
   w.includeOn=['estimate','invoice','both','none'].includes(raw.includeOn)?raw.includeOn:base.includeOn;
   let pr=Array.isArray(raw.presets)?raw.presets.filter(x=>x&&typeof x==='object'&&x.id!=null).map(x=>({id:String(x.id),name:str(x.name,''),heading:str(x.heading,''),includes:str(x.includes,''),note:str(x.note,''),thanks:str(x.thanks,'')})):[];
@@ -1833,7 +1839,7 @@ function saveClient(){
   const name=$('c-name').value.trim();if(!name){alert('Name required');return;}
   const rawPhone=$('c-phone').value.trim();
   const rawEmail=$('c-email').value.trim();
-  const data={name,email:fmtEmail(rawEmail),phone:rawPhone?fmtPhone(rawPhone):'',address:$('c-address').value.trim()};
+  const data={name,email:fmtEmail(rawEmail),phone:rawPhone?fmtPhone(rawPhone):'',address:$('c-address').value.trim(),taxExempt:$('c-exempt').checked,taxExemptId:$('c-exempt').checked?$('c-exempt-id').value.trim():''};
   if(S.editingClientId){
     const i=S.clients.findIndex(c=>c.id===S.editingClientId);
     if(i>-1)S.clients[i]={...S.clients[i],...data};
@@ -1841,7 +1847,7 @@ function saveClient(){
   } else {
     S.clients.push({id:Date.now(),...data});
   }
-  persist();closeModal('modal-client');['c-name','c-email','c-phone'].forEach(id=>$(id).value='');$('c-address').value='';
+  persist();closeModal('modal-client');['c-name','c-email','c-phone','c-exempt-id'].forEach(id=>$(id).value='');$('c-address').value='';$('c-exempt').checked=false;$('c-exempt-id-wrap').classList.add('hidden');
   $('client-modal-title').textContent='Add client';
   renderClients();refreshClients();toast('Client saved!');
 }
@@ -1852,6 +1858,7 @@ function editClient(id,e){
   $('client-modal-title').textContent='Edit client';
   $('c-name').value=c.name||'';$('c-email').value=c.email||'';
   $('c-phone').value=c.phone||'';$('c-address').value=c.address||'';
+  $('c-exempt').checked=!!c.taxExempt;$('c-exempt-id').value=c.taxExemptId||'';$('c-exempt-id-wrap').classList.toggle('hidden',!c.taxExempt);
   openModal('modal-client');
 }
 function delClient(id,e){
@@ -1864,11 +1871,11 @@ function renderClients(){
     const ou=S.documents.filter(d=>d.type==='invoice'&&d.clientId===c.id).reduce((s,d)=>s+docBal(d),0);
     return`<div class="client-card"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
       <div class="avatar">${ini(c.name)}</div>
-      <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;">${c.name}</div><div style="font-size:12px;color:var(--text2);">${c.email||''}</div></div>
+      <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:600;">${escH(c.name)}${c.taxExempt?` <span class="badge paid" style="margin-left:6px;font-size:10px;padding:2px 7px;vertical-align:middle;">Tax exempt</span>`:''}</div><div style="font-size:12px;color:var(--text2);">${escH(c.email||'')}</div>${c.taxExempt&&c.taxExemptId?`<div style="font-size:11px;color:var(--text3);">Certificate: ${escH(c.taxExemptId)}</div>`:''}</div>
       <button class="del" onclick="editClient(${c.id},event)" title="Edit"><i class="ti ti-pencil" style="font-size:14px;"></i></button>
       <button class="del" onclick="delClient(${c.id},event)" title="Delete"><i class="ti ti-trash" style="font-size:14px;"></i></button></div>
       ${ou>0?`<div style="font-size:12px;margin-top:4px;">Outstanding: <strong style="color:var(--red);">${fm(ou)}</strong></div>`:''}
-      ${c.phone?`<div style="font-size:12px;color:var(--text2);margin-top:2px;"><i class="ti ti-phone" style="font-size:12px;"></i> ${c.phone}</div>`:''}
+      ${c.phone?`<div style="font-size:12px;color:var(--text2);margin-top:2px;"><i class="ti ti-phone" style="font-size:12px;"></i> ${escH(c.phone)}</div>`:''}
     </div>`;
   }).join('');
 }
@@ -1913,7 +1920,8 @@ function duplicateDoc(id,e){
     wordingPreset:src.wordingPreset||'',
     ...(typeof src.incOverride==='string'?{incOverride:src.incOverride}:{}),
     lineItems:JSON.parse(JSON.stringify(src.lineItems||[])),
-    taxRate:src.taxRate||0,
+    taxRate:src.taxExempt?0:(src.taxRate||0),
+    ...(src.taxExempt?{taxExempt:true,taxExemptId:src.taxExemptId||''}:{}),
     discount:src.discount||0,
     total:src.total||0
   };
@@ -1981,6 +1989,39 @@ function docIncCustomToggle(){
   if(on&&!$('doc-inc').value)$('doc-inc').value=wInclLines({wordingPreset:$('doc-preset').value}).join('\n');
   docPresetChanged();
 }
+// TAX EXEMPT (per client flag -> per document snapshot)
+let exemptAuto=false,taxTouched=false,prevTaxRate='0';
+const docExempt=()=>!!$('doc-exempt').checked;
+function setExemptUI(on,id,fromUser){
+  const cb=$('doc-exempt'),tr=$('tax-rate');
+  if(on&&!tr.disabled){prevTaxRate=tr.value||'0';}
+  cb.checked=on;$('doc-exempt-id-wrap').classList.toggle('hidden',!on);
+  if(on){$('doc-exempt-id').value=id||'';tr.value=0;tr.disabled=true;}
+  else{if(tr.disabled){tr.value=prevTaxRate;}tr.disabled=false;if(!fromUser)$('doc-exempt-id').value='';}
+  updateTotals();
+}
+function taxTyped(){taxTouched=true;updateTotals();}
+function docExemptToggled(){
+  exemptAuto=false;const on=docExempt();
+  const cl=S.clients.find(c=>c.id===(parseInt($('doc-client').value)||null));
+  if(on){setExemptUI(true,cl&&cl.taxExempt?cl.taxExemptId:'',true);}
+  else setExemptUI(false,'',true);
+  docClientHint();
+}
+function docClientHint(){
+  const h=$('doc-exempt-hint'),cl=S.clients.find(c=>c.id===(parseInt($('doc-client').value)||null));
+  if(cl&&cl.taxExempt&&!docExempt()){h.textContent=cl.name+' is marked tax exempt. Tick the box above to use 0% tax.';h.classList.remove('hidden');}
+  else{h.textContent='';h.classList.add('hidden');}
+}
+function docClientChanged(){
+  const cl=S.clients.find(c=>c.id===(parseInt($('doc-client').value)||null));
+  // only brand-new documents follow the client, and never over a rate the user typed
+  if(exemptAuto&&!taxTouched){
+    if(cl&&cl.taxExempt)setExemptUI(true,cl.taxExemptId||'',false);
+    else setExemptUI(false,'',false);
+  }
+  docClientHint();
+}
 function setDocType(t){
   $('doc-type').value=t;
   const ib=$('toggle-invoice'),eb=$('toggle-estimate');
@@ -2017,6 +2058,8 @@ function initCreate(d){
   $('doc-due').value=d?(d.due||''):'';
   $('doc-notes').value=d?(d.notes||''):'';
   $('tax-rate').value=d?(d.taxRate||0):0;
+  exemptAuto=!d;taxTouched=false;prevTaxRate='0';$('tax-rate').disabled=false;
+  setExemptUI(!!(d&&d.taxExempt),d&&d.taxExemptId,true);
   $('discount-amount').value=d?(d.discountVal||d.discount||0):0;
   discType=d?d.discType||'dollar':'dollar';
   $('doc-status').value=d?d.status:'draft';
@@ -2030,6 +2073,7 @@ function initCreate(d){
   setDocType(t);
   setDiscType(discType);
   refreshClients();if(d)$('doc-client').value=d.clientId||'';
+  docClientHint();
   renderLines();
 }
 function updateDocType(){
@@ -2061,7 +2105,7 @@ function updateTotals(){
   const sub=S.lineItems.reduce((s,i)=>s+(i.qty||0)*(i.price||0),0);
   const disc=calcDiscount(sub);
   const afterDisc=Math.max(0,sub-disc);
-  const tr=parseFloat($('tax-rate').value)||0,tax=afterDisc*tr/100;
+  const tr=docExempt()?0:(parseFloat($('tax-rate').value)||0),tax=afterDisc*tr/100;
   $('subtotal').textContent=fm(sub);
   const dd=$('discount-display');
   if(dd){dd.textContent=disc>0?'-'+fm(disc):'-$0.00';dd.style.color=disc>0?'var(--red)':'var(--text3)';}
@@ -2072,7 +2116,7 @@ function getTotal(){
   const sub=S.lineItems.reduce((s,i)=>s+(i.qty||0)*(i.price||0),0);
   const disc=calcDiscount(sub);
   const afterDisc=Math.max(0,sub-disc);
-  return afterDisc+afterDisc*(parseFloat($('tax-rate').value)||0)/100;
+  return afterDisc+afterDisc*(docExempt()?0:(parseFloat($('tax-rate').value)||0))/100;
 }
 function showSaveIndicator(){
   const ind=$('save-indicator');
@@ -2096,7 +2140,8 @@ function saveDoc(ov){
     wordingPreset:$('doc-preset').value,
     ...($('doc-inc-custom').checked?{incOverride:$('doc-inc').value}:{}),
     lineItems:JSON.parse(JSON.stringify(S.lineItems)),
-    taxRate:parseFloat($('tax-rate').value)||0,
+    taxRate:docExempt()?0:(parseFloat($('tax-rate').value)||0),
+    ...(docExempt()?{taxExempt:true,taxExemptId:$('doc-exempt-id').value.trim()}:{}),
     discount:calcDiscount(sub),
     discountVal:discVal,
     discType:discType,
@@ -2317,7 +2362,7 @@ function getWordingFrom(x){const keep=S.branding.docWording;S.branding.docWordin
 function dwLoad(){
   dwDraft=getWording();dwCur=dwDraft.defaultPreset;
   $('dw-validdays').value=dwDraft.validDays;$('dw-includeon').value=dwDraft.includeOn;$('dw-esttitle').value=dwDraft.estimateTitle;$('dw-invtitle').value=dwDraft.invoiceTitle;
-  $('dw-validlabel').value=dwDraft.validLabel;$('dw-duelabel').value=dwDraft.dueLabel;$('dw-taxlabel').value=dwDraft.taxLabel;
+  $('dw-validlabel').value=dwDraft.validLabel;$('dw-duelabel').value=dwDraft.dueLabel;$('dw-taxlabel').value=dwDraft.taxLabel;$('dw-exemptlabel').value=dwDraft.taxExemptLabel;
   dwFill();
 }
 function dwFill(){
@@ -2334,7 +2379,7 @@ function dwCommit(){
   if(p){p.name=$('dw-name').value.trim();p.heading=$('dw-heading').value;p.includes=$('dw-includes').value;p.note=$('dw-note').value;p.thanks=$('dw-thanks').value;if($('dw-default').checked)dwDraft.defaultPreset=p.id;}
   const n=parseInt($('dw-validdays').value,10);dwDraft.validDays=Number.isFinite(n)&&n>=0?n:30;
   dwDraft.includeOn=$('dw-includeon').value;dwDraft.estimateTitle=$('dw-esttitle').value;dwDraft.invoiceTitle=$('dw-invtitle').value;
-  dwDraft.validLabel=$('dw-validlabel').value;dwDraft.dueLabel=$('dw-duelabel').value;dwDraft.taxLabel=$('dw-taxlabel').value;
+  dwDraft.validLabel=$('dw-validlabel').value;dwDraft.dueLabel=$('dw-duelabel').value;dwDraft.taxLabel=$('dw-taxlabel').value;dwDraft.taxExemptLabel=$('dw-exemptlabel').value;
 }
 function dwSwitch(){const next=$('dw-sel').value;dwCommit();dwCur=next;dwFill();}
 function dwNewId(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
@@ -2351,7 +2396,7 @@ function dwReset(){
   if(!confirm('Restore the original wording and presets? Your own presets and edits in this section will be replaced (press Save to keep).'))return;
   dwDraft=defaultWording();dwCur=dwDraft.defaultPreset;
   $('dw-validdays').value=dwDraft.validDays;$('dw-includeon').value=dwDraft.includeOn;$('dw-esttitle').value=dwDraft.estimateTitle;$('dw-invtitle').value=dwDraft.invoiceTitle;
-  $('dw-validlabel').value=dwDraft.validLabel;$('dw-duelabel').value=dwDraft.dueLabel;$('dw-taxlabel').value=dwDraft.taxLabel;dwFill();
+  $('dw-validlabel').value=dwDraft.validLabel;$('dw-duelabel').value=dwDraft.dueLabel;$('dw-taxlabel').value=dwDraft.taxLabel;$('dw-exemptlabel').value=dwDraft.taxExemptLabel;dwFill();
 }
 function previewLogo(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{S.branding.logoDataUrl=ev.target.result;const prev=$('logo-preview');$('logo-placeholder').classList.add('hidden');prev.querySelectorAll('img').forEach(i=>i.remove());const img=document.createElement('img');img.src=ev.target.result;prev.appendChild(img);};r.readAsDataURL(f);}
 function removeLogo(){S.branding.logoDataUrl='';$('logo-preview').querySelectorAll('img').forEach(i=>i.remove());$('logo-placeholder').classList.remove('hidden');$('logo-upload').value='';}
@@ -2444,7 +2489,7 @@ function docHTML(doc){
   const subForPDF=doc.lineItems.reduce((s,i)=>s+(i.qty||0)*(i.price||0),0);
   const discForPDF=doc.discount||0;
   const afterDiscForPDF=Math.max(0,subForPDF-discForPDF);
-  const taxForPDF=afterDiscForPDF*(doc.taxRate||0)/100;
+  const taxForPDF=doc.taxExempt?0:afterDiscForPDF*(doc.taxRate||0)/100;
   const totalForPDF=afterDiscForPDF+taxForPDF;
   const payH=docPayments.length?`<div style="margin-bottom:10px;"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#aaa;font-weight:700;margin-bottom:6px;">Payments received</div><table style="width:100%;border-collapse:collapse;font-size:11.5px;"><thead><tr>${['Date','Method','Reference','Amount'].map(h=>`<th style="text-align:left;padding:5px 10px;background:#f0f0f0;color:#555;font-size:10px;text-transform:uppercase;">${h}</th>`).join('')}</tr></thead><tbody>${docPayments.map(p=>`<tr><td style="padding:5px 10px;border-bottom:1px solid #eee;">${escH(p.date)}</td><td style="padding:5px 10px;border-bottom:1px solid #eee;">${escH(p.method)}</td><td style="padding:5px 10px;border-bottom:1px solid #eee;color:#777;">${escH(p.note||'')}</td><td style="padding:5px 10px;border-bottom:1px solid #eee;text-align:right;color:#0F6E56;font-weight:600;">${fm(p.amount)}</td></tr>`).join('')}</tbody></table></div>`:'';
   const payInfoTxt=((S.branding&&S.branding.paymentInfo)||'').trim();
@@ -2507,7 +2552,7 @@ tfoot tr.balance td{font-size:15px;font-weight:800;color:#1a1a1a;padding-top:4px
 <tfoot>
   <tr><td colspan="3" style="text-align:right;padding-right:12px;">Subtotal</td><td style="text-align:right;">${fm(subForPDF)}</td></tr>
   ${discForPDF>0?`<tr><td colspan="3" style="text-align:right;padding-right:12px;color:#A32D2D;">Discount</td><td style="text-align:right;color:#A32D2D;">-${fm(discForPDF)}</td></tr>`:''}
-  ${doc.taxRate?`<tr><td colspan="3" style="text-align:right;padding-right:12px;">${escH(W.taxLabel)} (${escH(doc.taxRate)}%)</td><td style="text-align:right;">${fm(taxForPDF)}</td></tr>`:''}
+  ${doc.taxExempt?`<tr><td colspan="3" style="text-align:right;padding-right:12px;">${escH(W.taxExemptLabel||'Tax exempt')}</td><td style="text-align:right;">${fm(0)}</td></tr>${(doc.taxExemptId||'').trim()?`<tr><td colspan="4" style="text-align:right;padding-right:12px;font-size:10px;color:#777;">Certificate: ${escH(String(doc.taxExemptId).trim())}</td></tr>`:''}`:doc.taxRate?`<tr><td colspan="3" style="text-align:right;padding-right:12px;">${escH(W.taxLabel)} (${escH(doc.taxRate)}%)</td><td style="text-align:right;">${fm(taxForPDF)}</td></tr>`:''}
   <tr class="grand"><td colspan="3" style="text-align:right;padding-right:12px;">Total</td><td style="text-align:right;">${fm(totalForPDF)}</td></tr>
   ${paidSoFar>0?`<tr><td colspan="3" style="text-align:right;padding-right:12px;color:#0F6E56;">Amount paid</td><td style="text-align:right;color:#0F6E56;">-${fm(paidSoFar)}</td></tr><tr class="balance"><td colspan="3" style="text-align:right;padding-right:12px;">Balance due</td><td style="text-align:right;">${fm(Math.max(0,totalForPDF-paidSoFar))}</td></tr>`:''}
 </tfoot>
